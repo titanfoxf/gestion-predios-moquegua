@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión Predial Moquegua - Final</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+
+    <style>
+        :root { --primary: #1e272e; --accent: #0fbcf9; --done: #05c46b; --process: #ffdd59; --pending: #ff5e57; }
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; background: #f1f2f6; }
+        #sidebar { width: 400px; background: var(--primary); color: white; padding: 25px; display: flex; flex-direction: column; gap: 20px; z-index: 1001; box-shadow: 5px 0 15px rgba(0,0,0,0.5); }
+        #map { flex-grow: 1; }
+        .search-box { background: #34495e; padding: 15px; border-radius: 10px; }
+        .search-box input { width: 100%; padding: 10px; border-radius: 5px; border: none; box-sizing: border-box; }
+        .filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .filter-btn { border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 11px; }
+        
+        /* Estilo del Popup */
+        .popup-container { min-width: 240px; color: #2d3436; }
+        .popup-title { font-weight: bold; color: var(--primary); border-bottom: 2px solid var(--accent); margin-bottom: 8px; font-size: 14px; padding-bottom: 4px; }
+        .data-row { display: flex; justify-content: space-between; margin-bottom: 5px; border-bottom: 1px dotted #ccc; padding-bottom: 2px; }
+        .label { font-weight: bold; color: #636e72; font-size: 10px; text-transform: uppercase; }
+        .value { font-size: 12px; font-weight: 500; }
+        .loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary); color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
+    </style>
+</head>
+<body>
+
+<div id="loader" class="loading-screen">
+    <h2 style="color: var(--accent)">SISTEMA CATASTRAL MOQUEGUA</h2>
+    <p>Vinculando Polígonos con Base de Datos PE...</p>
+</div>
+
+<div id="sidebar">
+    <div style="text-align: center;">
+        <h2 style="margin:0;">VISOR DE PREDIOS</h2>
+        <small style="color: var(--accent)">GESTIÓN DE PARTIDAS ELECTRÓNICAS</small>
+    </div>
+    
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Buscar por CUS, PE o Propietario...">
+        <button onclick="buscarUniversal()" style="width:100%; margin-top:8px; padding:8px; background:var(--accent); border:none; color:white; border-radius:5px; cursor:pointer; font-weight:bold;">BUSCAR</button>
+    </div>
+
+    <div class="filter-grid">
+        <button class="filter-btn" style="background: #a4b0be; grid-column: span 2;" onclick="filtrarMapa('TODOS')">TODOS (<span id="count-all">-</span>)</button>
+        <button class="filter-btn" style="background: var(--done);" onclick="filtrarMapa('TERMINADO')">TERMINADO (<span id="count-done">-</span>)</button>
+        <button class="filter-btn" style="background: var(--process);" onclick="filtrarMapa('PROCESO')">PROCESO (<span id="count-process">-</span>)</button>
+        <button class="filter-btn" style="background: var(--pending); color:white" onclick="filtrarMapa('PENDIENTE')">PENDIENTE (<span id="count-pending">-</span>)</button>
+    </div>
+
+    <div id="resumen" style="font-size: 12px; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 5px;">
+        Cargando estadísticas...
+    </div>
+</div>
+
+<div id="map"></div>
+
+<script>
+    // 1. MAPA BASE
+    var satelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}');
+    var map = L.map('map', { center: [-17.193, -70.933], zoom: 16, layers: [satelite] });
+
+    var geojsonLayer;
+    var dbExcel = {}; 
+    const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTPFK63kpF9SASdx-AXGUSA8UnSNxCpfcJbo6SFsF2s8jvvc3b_cbBEbNgyedsOYOtc1sS3cnI3GE75/pub?output=csv";
+
+    // 2. PROCESO DE DATOS
+    Papa.parse(sheetURL, {
+        download: true,
+        header: true,
+        complete: function(results) {
+            results.data.forEach(row => {
+                if(row.NRO_CUS) dbExcel[row.NRO_CUS.trim()] = row;
+            });
+
+            fetch('PoligonosFER.json')
+                .then(res => res.json())
+                .then(data => {
+                    geojsonLayer = L.geoJSON(data, {
+                        style: function(f) {
+                            let est = (dbExcel[f.properties.NRO_CUS] ? dbExcel[f.properties.NRO_CUS].ESTADO : "PENDIENTE").toUpperCase();
+                            let color = "#ff5e57";
+                            if (est === "TERMINADO") color = "#05c46b";
+                            if (est.includes("PROCESO")) color = "#ffdd59";
+                            return { fillColor: color, weight: 1.2, color: 'white', fillOpacity: 0.65 };
+                        },
+                        onEachFeature: function(f, l) {
+                            let c = f.properties.NRO_CUS;
+                            let i = dbExcel[c] || {};
+                            
+                            // Ajuste de nombres de columnas exactos del Excel
+                            l.bindPopup(`
+                                <div class="popup-container">
+                                    <div class="popup-title">CUS: ${c}</div>
+                                    <div class="data-row"><span class="label">Partida (PE):</span><span class="value">${i.PE || 'SIN REGISTRO'}</span></div>
+                                    <div class="data-row"><span class="label">Sector:</span><span class="value">${i.SECTOR || '---'}</span></div>
+                                    <div class="data-row"><span class="label">Manzana / Lote:</span><span class="value">${i.MZ || '-'} / ${i.LOTE || '-'}</span></div>
+                                    <div class="data-row"><span class="label">Área:</span><span class="value">${i.AREA_m2 || '0.00'} m²</span></div>
+                                    <div class="data-row" style="border:none; margin-top:5px;"><span class="label">Propietario:</span></div>
+                                    <div style="background:#f1f2f6; padding:8px; border-radius:4px; font-size:11px; margin-bottom:5px; font-weight:bold;">${i.PROPIETARI || 'NO IDENTIFICADO'}</div>
+                                    <div class="data-row"><span class="label">Estado de Trabajo:</span><span class="value" style="color:blue">${i.ESTADO || 'PENDIENTE'}</span></div>
+                                </div>
+                            `);
+                        }
+                    }).addTo(map);
+                    
+                    actualizarStats(data.features);
+                    document.getElementById('loader').style.display = 'none';
+                });
+        }
+    });
+
+    function buscarUniversal() {
+        let v = document.getElementById('searchInput').value.toLowerCase().trim();
+        let found = false;
+        geojsonLayer.eachLayer(l => {
+            let cus = l.feature.properties.NRO_CUS;
+            let info = dbExcel[cus] || {};
+            let bString = `${cus} ${info.PROPIETARI} ${info.PE} ${info.MZ}`.toLowerCase();
+            if(bString.includes(v)) {
+                if(!found) { map.fitBounds(l.getBounds()); l.openPopup(); }
+                found = true;
+            }
+        });
+        if(!found) alert("No se encontró el predio o partida.");
+    }
+
+    function filtrarMapa(f) {
+        geojsonLayer.eachLayer(l => {
+            let est = (dbExcel[l.feature.properties.NRO_CUS] ? dbExcel[l.feature.properties.NRO_CUS].ESTADO : "PENDIENTE").toUpperCase();
+            (f === 'TODOS' || est.includes(f)) ? map.addLayer(l) : map.removeLayer(l);
+        });
+    }
+
+    function actualizarStats(feats) {
+        let s = { T:0, D:0, P:0, PE:0 };
+        feats.forEach(f => {
+            let e = (dbExcel[f.properties.NRO_CUS] ? dbExcel[f.properties.NRO_CUS].ESTADO : "PENDIENTE").toUpperCase();
+            s.T++;
+            if(e === "TERMINADO") s.D++; else if(e.includes("PROCESO")) s.P++; else s.PE++;
+        });
+        document.getElementById('count-all').innerText = s.T;
+        document.getElementById('count-done').innerText = s.D;
+        document.getElementById('count-process').innerText = s.P;
+        document.getElementById('count-pending').innerText = s.PE;
+        document.getElementById('resumen').innerHTML = `<b>Resumen:</b> ${s.T} predios en base de datos.`;
+    }
+
+    document.getElementById('searchInput').addEventListener('keypress', e => { if(e.key === 'Enter') buscarUniversal(); });
+</script>
+</body>
+</html>
