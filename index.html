@@ -137,11 +137,20 @@
         let estado = "PENDIENTE";
         if(info && info[equipoActivo]) estado = info[equipoActivo].toUpperCase().trim();
         
-        let color = "#ff5e57";
-        if (estado === "TERMINADO") color = "#05c46b";
-        if (estado.includes("PROCESO")) color = "#ffdd59";
+        let color = "#ff5e57"; // Rojo
+        let opacidad = 0.2;    // <-- Transparencia fuerte (20%) para PENDIENTE
 
-        return { fillColor: color, weight: 1.2, color: 'white', fillOpacity: 0.7 };
+        if (estado === "TERMINADO") {
+            color = "#05c46b";
+            opacidad = 0.75;   // Color sólido (75%) para TERMINADO
+        } 
+        else if (estado.includes("PROCESO")) {
+            color = "#ffdd59";
+            opacidad = 0.75;   // Color sólido (75%) para PROCESO
+        }
+
+        // Aplicamos la opacidad dinámica
+        return { fillColor: color, weight: 1.2, color: 'white', fillOpacity: opacidad };
     }
 
     Papa.parse(sheetURL, {
