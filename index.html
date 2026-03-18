@@ -25,7 +25,7 @@
         #map-container { flex-grow: 1; position: relative; display: flex; flex-direction: column; }
         #map { flex-grow: 1; }
 
-        /* Botón para ocultar/mostrar panel */
+        /* Botón para ocultar/mostrar panel (Ahora sin estorbos) */
         .toggle-btn {
             position: absolute; top: 15px; left: 15px; z-index: 1000;
             background: var(--primary); color: white; border: none; padding: 10px 15px;
@@ -56,13 +56,9 @@
         .loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary); color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
         
         /* Créditos del Desarrollador */
-        .developer-credit {
-            margin-top: auto; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);
-            text-align: center; font-size: 11px; color: #a4b0be; line-height: 1.5;
-        }
+        .developer-credit { margin-top: auto; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center; font-size: 11px; color: #a4b0be; line-height: 1.5; }
         .developer-name { color: var(--accent); font-size: 13px; font-weight: bold; letter-spacing: 0.5px; }
         
-        /* Personalizar el control de capas */
         .leaflet-control-layers { border-radius: 8px !important; box-shadow: 0 4px 10px rgba(0,0,0,0.2) !important; font-family: 'Segoe UI', sans-serif; font-size: 13px; }
     </style>
 </head>
@@ -112,16 +108,17 @@
 </div>
 
 <script>
-    // 1. DEFINICIÓN DE MÚLTIPLES MAPAS BASE
     var satelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 });
     var calles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 });
     var topografia = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17 });
     var oscuro = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 });
 
-    // Inicializar mapa con Satélite por defecto
-    var map = L.map('map', { center: [-17.193, -70.933], zoom: 16, layers: [satelite] });
+    // FIX UX: Apagamos el control de zoom por defecto (zoomControl: false)
+    var map = L.map('map', { center: [-17.193, -70.933], zoom: 16, layers: [satelite], zoomControl: false });
 
-    // Añadir control al mapa (esquina superior derecha por defecto)
+    // FIX UX: Agregamos el control de zoom en la esquina inferior derecha
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
+
     var baseMaps = {
         "🛰️ Satélite (ESRI)": satelite,
         "🌙 Mapa Oscuro (Resaltado)": oscuro,
@@ -130,26 +127,23 @@
     };
     L.control.layers(baseMaps, null, { collapsed: false }).addTo(map);
 
-    // 2. VARIABLES GLOBALES
     var geojsonLayer;
     var dbExcel = {}; 
     var equipoActivo = "ESTADO_SINABIP";
     const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTPFK63kpF9SASdx-AXGUSA8UnSNxCpfcJbo6SFsF2s8jvvc3b_cbBEbNgyedsOYOtc1sS3cnI3GE75/pub?output=csv";
 
-    // 3. ESTILOS DINÁMICOS
     function obtenerEstiloPorEquipo(cus) {
         let info = dbExcel[cus];
         let estado = "PENDIENTE";
         if(info && info[equipoActivo]) estado = info[equipoActivo].toUpperCase().trim();
         
-        let color = "#ff5e57"; // Rojo
-        if (estado === "TERMINADO") color = "#05c46b"; // Verde
-        if (estado.includes("PROCESO")) color = "#ffdd59"; // Amarillo
+        let color = "#ff5e57";
+        if (estado === "TERMINADO") color = "#05c46b";
+        if (estado.includes("PROCESO")) color = "#ffdd59";
 
         return { fillColor: color, weight: 1.2, color: 'white', fillOpacity: 0.7 };
     }
 
-    // 4. CARGA DE DATOS DE GOOGLE SHEETS Y GEOJSON
     Papa.parse(sheetURL, {
         download: true, header: true,
         complete: function(results) {
@@ -199,13 +193,13 @@
         return "#d63031";
     }
 
-    // 5. FUNCIONES DE INTERACTIVIDAD
     function cambiarEquipoActivo() {
         equipoActivo = document.getElementById('equipoSelect').value;
         geojsonLayer.eachLayer(function(layer) {
             layer.setStyle(obtenerEstiloPorEquipo(layer.feature.properties.NRO_CUS));
         });
         filtrarMapa('TODOS');
+        actualizarStats(); // Asegurar que los números se actualicen al cambiar de equipo
     }
 
     function toggleSidebar() {
@@ -222,20 +216,20 @@
             
             (f === 'TODOS' || est.includes(f)) ? map.addLayer(l) : map.removeLayer(l);
         });
-        actualizarStats(); 
+        // IMPORTANTE: Ya NO llamamos a actualizarStats() aquí. 
+        // Así los números se mantienen fijos aunque filtres el mapa.
     }
 
+    // FIX LÓGICA: Ahora cuenta TODOS los polígonos de la base de datos, no solo los visibles.
     function actualizarStats() {
         let s = { T:0, D:0, P:0, PE:0 };
         geojsonLayer.eachLayer(l => {
-            if(map.hasLayer(l)){ // Solo contar los visibles en el mapa
-                let info = dbExcel[l.feature.properties.NRO_CUS];
-                let e = "PENDIENTE";
-                if(info && info[equipoActivo]) e = info[equipoActivo].toUpperCase().trim();
-                
-                s.T++;
-                if(e === "TERMINADO") s.D++; else if(e.includes("PROCESO")) s.P++; else s.PE++;
-            }
+            let info = dbExcel[l.feature.properties.NRO_CUS];
+            let e = "PENDIENTE";
+            if(info && info[equipoActivo]) e = info[equipoActivo].toUpperCase().trim();
+            
+            s.T++;
+            if(e === "TERMINADO") s.D++; else if(e.includes("PROCESO")) s.P++; else s.PE++;
         });
         document.getElementById('count-all').innerText = s.T;
         document.getElementById('count-done').innerText = s.D;
@@ -262,4 +256,3 @@
 </script>
 </body>
 </html>
-
