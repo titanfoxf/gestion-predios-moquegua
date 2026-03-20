@@ -10,7 +10,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
 
     <style>
-        :root { --primary: #1e272e; --accent: #0fbcf9; --done: #05c46b; --process: #ffdd59; --pending: #ff5e57; }
+        /* Se agregó --panel a las variables de color */
+        :root { --primary: #1e272e; --accent: #0fbcf9; --done: #05c46b; --process: #ffdd59; --panel: #a55eea; --pending: #ff5e57; }
         body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; background: #f1f2f6; overflow: hidden; }
         
         /* Panel Lateral Retráctil */
@@ -94,6 +95,9 @@
         <button class="filter-btn" style="background: #a4b0be; grid-column: span 2;" onclick="filtrarMapa('TODOS')">TODOS (<span id="count-all">-</span>)</button>
         <button class="filter-btn" style="background: var(--done); color: white;" onclick="filtrarMapa('TERMINADO')">TERMINADO (<span id="count-done">-</span>)</button>
         <button class="filter-btn" style="background: var(--process);" onclick="filtrarMapa('PROCESO')">PROCESO (<span id="count-process">-</span>)</button>
+        
+        <button class="filter-btn" id="btn-panel" style="background: var(--panel); color: white; display: none;" onclick="filtrarMapa('PANEL')">PANEL (<span id="count-panel">-</span>)</button>
+        
         <button class="filter-btn" style="background: var(--pending); color: white;" onclick="filtrarMapa('PENDIENTE')">PENDIENTE (<span id="count-pending">-</span>)</button>
     </div>
 
@@ -109,7 +113,6 @@
 </div>
 
 <script>
-    // --- FUNCIÓN PARA MANEJAR ERRORES VISUALMENTE ---
     function mostrarError(mensajeError) {
         const loader = document.getElementById('loader');
         loader.innerHTML = `
@@ -143,12 +146,13 @@
     var equipoActivo = "ESTADO_SINABIP";
     const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTPFK63kpF9SASdx-AXGUSA8UnSNxCpfcJbo6SFsF2s8jvvc3b_cbBEbNgyedsOYOtc1sS3cnI3GE75/pub?output=csv";
 
+    // --- LÓGICA DE COLORES POR EQUIPO ACTUALIZADA ---
     function obtenerEstiloPorEquipo(cus) {
         let info = dbExcel[cus];
         let estado = "PENDIENTE";
         if(info && info[equipoActivo]) estado = info[equipoActivo].toUpperCase().trim();
         
-        let color = "#ff5e57"; // Rojo
+        let color = "#ff5e57"; // Rojo por defecto
         let opacidad = 0.35;    
 
         if (estado === "TERMINADO") {
@@ -159,11 +163,14 @@
             color = "#ffdd59";
             opacidad = 0.75;   
         }
+        else if (estado === "PANEL") {
+            color = "#a55eea"; // Nuevo color morado
+            opacidad = 0.75;
+        }
 
         return { fillColor: color, weight: 1.2, color: 'white', fillOpacity: opacidad };
     }
 
-    // --- CARGA DE DATOS ---
     document.getElementById('loader-text').innerText = "Conectando con Google Sheets...";
 
     Papa.parse(sheetURL, {
@@ -222,11 +229,13 @@
         }
     });
 
+    // --- COLORES DEL POPUP ACTUALIZADOS ---
     function getColorText(estado) {
         if(!estado) return "#d63031";
         estado = estado.toUpperCase().trim();
         if(estado === "TERMINADO") return "#00b894";
         if(estado.includes("PROCESO")) return "#e1b12c";
+        if(estado === "PANEL") return "#9b59b6"; // Color texto Panel
         return "#d63031";
     }
 
@@ -245,30 +254,58 @@
         setTimeout(() => { map.invalidateSize(); }, 300);
     }
 
+    // --- LÓGICA DE FILTRADO ACTUALIZADA ---
     function filtrarMapa(f) {
         geojsonLayer.eachLayer(l => {
             let info = dbExcel[l.feature.properties.NRO_CUS];
-            let est = "PENDIENTE";
-            if(info && info[equipoActivo]) est = info[equipoActivo].toUpperCase().trim();
+            let est_raw = "PENDIENTE";
+            if(info && info[equipoActivo]) est_raw = info[equipoActivo].toUpperCase().trim();
             
-            (f === 'TODOS' || est.includes(f)) ? map.addLayer(l) : map.removeLayer(l);
+            // Estandarizar estado para la lógica de filtrado exacto
+            let est_final = "PENDIENTE";
+            if (est_raw === "TERMINADO") est_final = "TERMINADO";
+            else if (est_raw.includes("PROCESO")) est_final = "PROCESO";
+            else if (est_raw === "PANEL") est_final = "PANEL";
+
+            if (f === 'TODOS' || est_final === f) {
+                map.addLayer(l);
+            } else {
+                map.removeLayer(l);
+            }
         });
     }
 
+    // --- LÓGICA DE ESTADÍSTICAS ACTUALIZADA ---
     function actualizarStats() {
-        let s = { T:0, D:0, P:0, PE:0 };
+        let s = { T:0, D:0, P:0, PA:0, PE:0 }; // Se agregó PA (Panel)
+        
         geojsonLayer.eachLayer(l => {
             let info = dbExcel[l.feature.properties.NRO_CUS];
             let e = "PENDIENTE";
             if(info && info[equipoActivo]) e = info[equipoActivo].toUpperCase().trim();
             
             s.T++;
-            if(e === "TERMINADO") s.D++; else if(e.includes("PROCESO")) s.P++; else s.PE++;
+            if(e === "TERMINADO") s.D++; 
+            else if(e.includes("PROCESO")) s.P++; 
+            else if(e === "PANEL") s.PA++; // Contador Panel
+            else s.PE++;
         });
+
         document.getElementById('count-all').innerText = s.T;
         document.getElementById('count-done').innerText = s.D;
         document.getElementById('count-process').innerText = s.P;
         document.getElementById('count-pending').innerText = s.PE;
+
+        // Mostrar u ocultar el botón Panel según el equipo activo
+        let btnPanel = document.getElementById('btn-panel');
+        if (btnPanel) {
+            document.getElementById('count-panel').innerText = s.PA;
+            if (equipoActivo === 'ESTADO_INSP_PAN') {
+                btnPanel.style.display = 'block';
+            } else {
+                btnPanel.style.display = 'none';
+            }
+        }
     }
 
     function buscarUniversal() {
