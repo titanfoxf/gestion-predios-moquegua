@@ -25,7 +25,7 @@
         #map-container { flex-grow: 1; position: relative; display: flex; flex-direction: column; }
         #map { flex-grow: 1; }
 
-        /* Botón para ocultar/mostrar panel (Ahora sin estorbos) */
+        /* Botón para ocultar/mostrar panel */
         .toggle-btn {
             position: absolute; top: 15px; left: 15px; z-index: 1000;
             background: var(--primary); color: white; border: none; padding: 10px 15px;
@@ -53,7 +53,7 @@
         .status-box { background: #f1f2f6; padding: 8px; border-radius: 5px; margin-top: 10px; }
         .status-item { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 3px; font-weight: bold; }
 
-        .loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary); color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
+        .loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary); color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; text-align: center; padding: 20px;}
         
         /* Créditos del Desarrollador */
         .developer-credit { margin-top: auto; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center; font-size: 11px; color: #a4b0be; line-height: 1.5; }
@@ -66,7 +66,7 @@
 
 <div id="loader" class="loading-screen">
     <h2 style="color: var(--accent)">COMPONENTE DE SANEAMIENTO</h2>
-    <p>Cargando topografía y datos catastrales...</p>
+    <p id="loader-text">Cargando topografía y datos catastrales...</p>
 </div>
 
 <div id="sidebar">
@@ -81,6 +81,7 @@
             <option value="ESTADO_SINABIP">📊 Equipo SINABIP</option>
             <option value="ESTADO_RD">📊 Equipo RD</option>
             <option value="ESTADO_ITJ">📊 Equipo ITJ</option>
+            <option value="ESTADO_INSP_PAN">📊 Inspección y Panel</option>
         </select>
     </div>
     
@@ -108,15 +109,25 @@
 </div>
 
 <script>
+    // --- FUNCIÓN PARA MANEJAR ERRORES VISUALMENTE ---
+    function mostrarError(mensajeError) {
+        const loader = document.getElementById('loader');
+        loader.innerHTML = `
+            <h2 style="color: var(--pending)">⚠️ ERROR DE CONEXIÓN</h2>
+            <p style="max-width: 600px; line-height: 1.5;">${mensajeError}</p>
+            <button onclick="location.reload()" style="margin-top: 20px; padding: 10px 20px; background: var(--accent); color: var(--primary); font-weight: bold; border: none; border-radius: 5px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+                Reintentar
+            </button>
+        `;
+    }
+
     var satelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 });
     var calles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 });
     var topografia = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17 });
     var oscuro = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 });
 
-    // FIX UX: Apagamos el control de zoom por defecto (zoomControl: false)
     var map = L.map('map', { center: [-17.193, -70.933], zoom: 16, layers: [satelite], zoomControl: false });
 
-    // FIX UX: Agregamos el control de zoom en la esquina inferior derecha
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
     var baseMaps = {
@@ -138,30 +149,42 @@
         if(info && info[equipoActivo]) estado = info[equipoActivo].toUpperCase().trim();
         
         let color = "#ff5e57"; // Rojo
-        let opacidad = 0.35;    // <-- Transparencia fuerte (20%) para PENDIENTE
+        let opacidad = 0.35;    
 
         if (estado === "TERMINADO") {
             color = "#05c46b";
-            opacidad = 0.75;   // Color sólido (75%) para TERMINADO
+            opacidad = 0.75;   
         } 
         else if (estado.includes("PROCESO")) {
             color = "#ffdd59";
-            opacidad = 0.75;   // Color sólido (75%) para PROCESO
+            opacidad = 0.75;   
         }
 
-        // Aplicamos la opacidad dinámica
         return { fillColor: color, weight: 1.2, color: 'white', fillOpacity: opacidad };
     }
 
+    // --- CARGA DE DATOS ---
+    document.getElementById('loader-text').innerText = "Conectando con Google Sheets...";
+
     Papa.parse(sheetURL, {
-        download: true, header: true,
+        download: true, 
+        header: true,
+        error: function(error) {
+            console.error("Error al descargar Google Sheets:", error);
+            mostrarError("No se pudo descargar la base de datos desde Google Sheets. Verifica tu conexión a internet o asegúrate de que el enlace siga publicado en la web.");
+        },
         complete: function(results) {
             results.data.forEach(row => {
                 if(row.NRO_CUS) dbExcel[row.NRO_CUS.trim()] = row;
             });
 
+            document.getElementById('loader-text').innerText = "Cargando cartografía GIS...";
+
             fetch('PoligonosFER.json')
-                .then(res => res.json())
+                .then(res => {
+                    if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
+                    return res.json();
+                })
                 .then(data => {
                     geojsonLayer = L.geoJSON(data, {
                         style: function(f) { return obtenerEstiloPorEquipo(f.properties.NRO_CUS); },
@@ -182,6 +205,7 @@
                                         <div class="status-item"><span>SINABIP:</span><span style="color:${getColorText(i.ESTADO_SINABIP)}">${i.ESTADO_SINABIP || 'PENDIENTE'}</span></div>
                                         <div class="status-item"><span>RD:</span><span style="color:${getColorText(i.ESTADO_RD)}">${i.ESTADO_RD || 'PENDIENTE'}</span></div>
                                         <div class="status-item"><span>ITJ:</span><span style="color:${getColorText(i.ESTADO_ITJ)}">${i.ESTADO_ITJ || 'PENDIENTE'}</span></div>
+                                        <div class="status-item"><span>INSP. Y PANEL:</span><span style="color:${getColorText(i.ESTADO_INSP_PAN)}">${i.ESTADO_INSP_PAN || 'PENDIENTE'}</span></div>
                                     </div>
                                 </div>
                             `);
@@ -189,7 +213,11 @@
                     }).addTo(map);
                     
                     actualizarStats();
-                    document.getElementById('loader').style.display = 'none';
+                    document.getElementById('loader').style.display = 'none'; 
+                })
+                .catch(error => {
+                    console.error("Error al cargar GeoJSON:", error);
+                    mostrarError("No se encontró el archivo de cartografía (PoligonosFER.json) o el formato es inválido. Verifica que el archivo esté en la misma carpeta que el index.html.");
                 });
         }
     });
@@ -208,7 +236,7 @@
             layer.setStyle(obtenerEstiloPorEquipo(layer.feature.properties.NRO_CUS));
         });
         filtrarMapa('TODOS');
-        actualizarStats(); // Asegurar que los números se actualicen al cambiar de equipo
+        actualizarStats();
     }
 
     function toggleSidebar() {
@@ -225,11 +253,8 @@
             
             (f === 'TODOS' || est.includes(f)) ? map.addLayer(l) : map.removeLayer(l);
         });
-        // IMPORTANTE: Ya NO llamamos a actualizarStats() aquí. 
-        // Así los números se mantienen fijos aunque filtres el mapa.
     }
 
-    // FIX LÓGICA: Ahora cuenta TODOS los polígonos de la base de datos, no solo los visibles.
     function actualizarStats() {
         let s = { T:0, D:0, P:0, PE:0 };
         geojsonLayer.eachLayer(l => {
