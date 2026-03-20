@@ -11,7 +11,7 @@
 
     <style>
         :root { --primary: #1e272e; --accent: #0fbcf9; --done: #05c46b; --process: #ffdd59; --panel: #a55eea; --pending: #ff5e57; }
-        body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; background: #f1f2f6; overflow: hidden; }
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; display: flex; height: 100dvh; background: #f1f2f6; overflow: hidden; }
         
         /* Panel Lateral Retráctil */
         #sidebar {
@@ -41,7 +41,8 @@
         .search-box { background: #34495e; padding: 15px; border-radius: 10px; }
         .search-box input { width: 100%; padding: 10px; border-radius: 5px; border: none; box-sizing: border-box; }
         .filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .filter-btn { border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 11px; color: #1e272e; }
+        .filter-btn { border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 11px; color: #1e272e; transition: 0.2s; }
+        .filter-btn:active { transform: scale(0.95); }
         
         /* Estilo del Popup */
         .popup-container { min-width: 250px; color: #2d3436; }
@@ -60,6 +61,7 @@
         .developer-name { color: var(--accent); font-size: 13px; font-weight: bold; letter-spacing: 0.5px; }
         
         .leaflet-control-layers { border-radius: 8px !important; box-shadow: 0 4px 10px rgba(0,0,0,0.2) !important; font-family: 'Segoe UI', sans-serif; font-size: 13px; }
+        .leaflet-bottom.leaflet-left { margin-bottom: 25px; }
     </style>
 </head>
 <body>
@@ -123,26 +125,15 @@
         `;
     }
 
-    // --- CAPAS BASE (INCLUYENDO ESRI Y GOOGLE) ---
+    // --- CAPAS BASE ---
     var satelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 });
-    
-    var googleSatelite = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', { 
-        maxZoom: 21, 
-        attribution: '© Google' 
-    });
-    
-    var googleHibrido = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', { 
-        maxZoom: 21, 
-        attribution: '© Google' 
-    });
-
+    var googleSatelite = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', { maxZoom: 21, attribution: '© Google' });
+    var googleHibrido = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', { maxZoom: 21, attribution: '© Google' });
     var calles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 });
     var topografia = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17 });
     var oscuro = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 });
 
-    // Inicializamos el mapa con el Satélite de ESRI por defecto
     var map = L.map('map', { center: [-17.193, -70.933], zoom: 16, layers: [satelite], zoomControl: false });
-
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
     var baseMaps = {
@@ -155,36 +146,105 @@
     };
     L.control.layers(baseMaps, null, { collapsed: false }).addTo(map);
 
-    // --- BOTÓN DE UBICACIÓN GPS ---
-    var gpsControl = L.control({position: 'bottomright'});
+    // --- GPS ROBUSTO EN TIEMPO REAL ---
+    var gpsControl = L.control({position: 'bottomleft'}); 
+    var isTracking = false;
+    var marcadorUsuario = null;
+    var circuloPrecision = null;
+
     gpsControl.onAdd = function (map) {
         var btn = L.DomUtil.create('button', 'leaflet-bar');
+        btn.id = 'btn-gps-field';
         btn.innerHTML = '📍';
-        btn.title = 'Ubicarme';
-        btn.style.cssText = 'background: white; border: 2px solid rgba(0,0,0,0.2); border-radius: 4px; width: 34px; height: 34px; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; margin-right: 10px;';
+        btn.title = 'Activar Seguimiento GPS';
+        btn.style.cssText = 'background: white; border: 2px solid rgba(0,0,0,0.2); border-radius: 8px; width: 48px; height: 48px; cursor: pointer; font-size: 24px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; margin-left: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.3); transition: all 0.3s ease;';
         
         btn.onclick = function() {
-            map.locate({setView: true, maxZoom: 18});
+            if (!isTracking) {
+                // ENCENDER GPS
+                isTracking = true;
+                btn.style.background = '#0fbcf9';
+                btn.style.color = 'white';
+                btn.innerHTML = '🛰️';
+                btn.style.boxShadow = '0 0 15px rgba(15, 188, 249, 0.6)';
+                
+                // Pedimos watch (seguimiento), alta precisión, tiempo máximo de espera 10s
+                map.locate({
+                    watch: true, 
+                    enableHighAccuracy: true, 
+                    maximumAge: 2000, 
+                    timeout: 10000 
+                });
+            } else {
+                // APAGAR GPS
+                isTracking = false;
+                btn.style.background = 'white';
+                btn.style.color = 'black';
+                btn.innerHTML = '📍';
+                btn.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
+                
+                map.stopLocate();
+                
+                // Limpiar marcador al apagar
+                if (marcadorUsuario) {
+                    map.removeLayer(marcadorUsuario);
+                    map.removeLayer(circuloPrecision);
+                    marcadorUsuario = null;
+                    circuloPrecision = null;
+                }
+            }
         };
         return btn;
     };
     gpsControl.addTo(map);
 
-    var marcadorUsuario;
+    // Evento cuando llega una actualización de posición
     map.on('locationfound', function(e) {
+        var radio = e.accuracy / 2;
+
         if (!marcadorUsuario) {
+            // Es la primera vez que nos ubica al prender el botón
+            circuloPrecision = L.circle(e.latlng, {
+                radius: radio, color: "#0fbcf9", weight: 1, opacity: 0.5, fillOpacity: 0.15
+            }).addTo(map);
+
             marcadorUsuario = L.circleMarker(e.latlng, {
-                radius: 8, fillColor: "#0fbcf9", color: "#fff", weight: 3, opacity: 1, fillOpacity: 0.9
-            }).addTo(map).bindPopup("Tu ubicación actual").openPopup();
+                radius: 8, fillColor: "#0fbcf9", color: "#fff", weight: 3, opacity: 1, fillOpacity: 1
+            }).addTo(map);
+            
+            // Centramos la pantalla SOLO la primera vez
+            map.flyTo(e.latlng, 18);
         } else {
+            // Actualizaciones mientras caminamos (solo mueve el punto, no fuerza la pantalla)
             marcadorUsuario.setLatLng(e.latlng);
+            circuloPrecision.setLatLng(e.latlng);
+            circuloPrecision.setRadius(radio);
         }
     });
 
+    // Evento de fallos de GPS (A prueba de errores)
     map.on('locationerror', function(e) {
-        alert("No se pudo obtener la ubicación. Verifica tener el GPS encendido y haber dado permisos al navegador.");
+        console.error("Error GPS:", e.message);
+        
+        // Apagamos visualmente el botón
+        let btn = document.getElementById('btn-gps-field');
+        if(isTracking && btn) {
+            btn.click(); // Simulamos un clic para apagar todo el proceso limpio
+        }
+
+        // Mensajes de error específicos
+        if (e.code === 1) {
+            alert("⚠️ PERMISO DENEGADO: El navegador bloqueó el GPS. Ve a la configuración de Chrome/Safari y permite la ubicación para esta página.");
+        } else if (e.code === 2) {
+            alert("⚠️ SEÑAL NO DISPONIBLE: Enciende el GPS (Ubicación) de tu celular e intenta de nuevo.");
+        } else if (e.code === 3) {
+            alert("⚠️ TIEMPO AGOTADO: La señal es muy débil. Intenta moverte a una zona más despejada (fuera de techos gruesos).");
+        } else {
+            alert("⚠️ Error de ubicación: " + e.message);
+        }
     });
 
+    // --- CARGA DE DATOS GEOJSON Y EXCEL ---
     var geojsonLayer;
     var dbExcel = {}; 
     var equipoActivo = "ESTADO_SINABIP";
@@ -195,21 +255,12 @@
         let estado = "PENDIENTE";
         if(info && info[equipoActivo]) estado = info[equipoActivo].toUpperCase().trim();
         
-        let color = "#ff5e57"; // Rojo por defecto
+        let color = "#ff5e57"; 
         let opacidad = 0.35;    
 
-        if (estado === "TERMINADO") {
-            color = "#05c46b";
-            opacidad = 0.75;   
-        } 
-        else if (estado.includes("PROCESO")) {
-            color = "#ffdd59";
-            opacidad = 0.75;   
-        }
-        else if (estado === "PANEL") {
-            color = "#a55eea"; // Nuevo color morado para Panel
-            opacidad = 0.75;
-        }
+        if (estado === "TERMINADO") { color = "#05c46b"; opacidad = 0.75; } 
+        else if (estado.includes("PROCESO")) { color = "#ffdd59"; opacidad = 0.75; }
+        else if (estado === "PANEL") { color = "#a55eea"; opacidad = 0.75; }
 
         return { fillColor: color, weight: 1.2, color: 'white', fillOpacity: opacidad };
     }
@@ -219,10 +270,7 @@
     Papa.parse(sheetURL, {
         download: true, 
         header: true,
-        error: function(error) {
-            console.error("Error al descargar Google Sheets:", error);
-            mostrarError("No se pudo descargar la base de datos desde Google Sheets. Verifica tu conexión a internet o asegúrate de que el enlace siga publicado en la web.");
-        },
+        error: function(error) { mostrarError("No se pudo descargar la base de datos."); },
         complete: function(results) {
             results.data.forEach(row => {
                 if(row.NRO_CUS) dbExcel[row.NRO_CUS.trim()] = row;
@@ -231,10 +279,7 @@
             document.getElementById('loader-text').innerText = "Cargando cartografía GIS...";
 
             fetch('PoligonosFER.json')
-                .then(res => {
-                    if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
-                    return res.json();
-                })
+                .then(res => { if (!res.ok) throw new Error(`Error HTTP: ${res.status}`); return res.json(); })
                 .then(data => {
                     geojsonLayer = L.geoJSON(data, {
                         style: function(f) { return obtenerEstiloPorEquipo(f.properties.NRO_CUS); },
@@ -265,10 +310,7 @@
                     actualizarStats();
                     document.getElementById('loader').style.display = 'none'; 
                 })
-                .catch(error => {
-                    console.error("Error al cargar GeoJSON:", error);
-                    mostrarError("No se encontró el archivo de cartografía (PoligonosFER.json) o el formato es inválido. Verifica que el archivo esté en la misma carpeta que el index.html.");
-                });
+                .catch(error => { mostrarError("Error al cargar GeoJSON. Verifica el archivo."); });
         }
     });
 
@@ -307,11 +349,8 @@
             else if (est_raw.includes("PROCESO")) est_final = "PROCESO";
             else if (est_raw === "PANEL") est_final = "PANEL";
 
-            if (f === 'TODOS' || est_final === f) {
-                map.addLayer(l);
-            } else {
-                map.removeLayer(l);
-            }
+            if (f === 'TODOS' || est_final === f) { map.addLayer(l); } 
+            else { map.removeLayer(l); }
         });
     }
 
@@ -338,11 +377,8 @@
         let btnPanel = document.getElementById('btn-panel');
         if (btnPanel) {
             document.getElementById('count-panel').innerText = s.PA;
-            if (equipoActivo === 'ESTADO_INSP_PAN') {
-                btnPanel.style.display = 'block';
-            } else {
-                btnPanel.style.display = 'none';
-            }
+            if (equipoActivo === 'ESTADO_INSP_PAN') { btnPanel.style.display = 'block'; } 
+            else { btnPanel.style.display = 'none'; }
         }
     }
 
@@ -354,7 +390,7 @@
             let info = dbExcel[cus] || {};
             let bString = `${cus} ${info.PROPIETARI} ${info.PE} ${info.MZ}`.toLowerCase();
             if(bString.includes(v)) {
-                if(!found) { map.fitBounds(l.getBounds()); l.openPopup(); }
+                if(!found) { map.flyTo(l.getBounds().getCenter(), 19); l.openPopup(); }
                 found = true;
             }
         });
