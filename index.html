@@ -10,7 +10,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
 
     <style>
-        /* Se agregó --panel a las variables de color */
         :root { --primary: #1e272e; --accent: #0fbcf9; --done: #05c46b; --process: #ffdd59; --panel: #a55eea; --pending: #ff5e57; }
         body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; background: #f1f2f6; overflow: hidden; }
         
@@ -124,29 +123,73 @@
         `;
     }
 
+    // --- CAPAS BASE (INCLUYENDO ESRI Y GOOGLE) ---
     var satelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 });
+    
+    var googleSatelite = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', { 
+        maxZoom: 21, 
+        attribution: '© Google' 
+    });
+    
+    var googleHibrido = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', { 
+        maxZoom: 21, 
+        attribution: '© Google' 
+    });
+
     var calles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 });
     var topografia = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17 });
     var oscuro = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 });
 
+    // Inicializamos el mapa con el Satélite de ESRI por defecto
     var map = L.map('map', { center: [-17.193, -70.933], zoom: 16, layers: [satelite], zoomControl: false });
 
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
     var baseMaps = {
         "🛰️ Satélite (ESRI)": satelite,
+        "🛰️ Google Satélite": googleSatelite,
+        "🌍 Google Híbrido (Con Calles)": googleHibrido,
         "🌙 Mapa Oscuro (Resaltado)": oscuro,
         "⛰️ Topografía (Relieve)": topografia,
         "🗺️ Calles (OSM)": calles
     };
     L.control.layers(baseMaps, null, { collapsed: false }).addTo(map);
 
+    // --- BOTÓN DE UBICACIÓN GPS ---
+    var gpsControl = L.control({position: 'bottomright'});
+    gpsControl.onAdd = function (map) {
+        var btn = L.DomUtil.create('button', 'leaflet-bar');
+        btn.innerHTML = '📍';
+        btn.title = 'Ubicarme';
+        btn.style.cssText = 'background: white; border: 2px solid rgba(0,0,0,0.2); border-radius: 4px; width: 34px; height: 34px; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; margin-right: 10px;';
+        
+        btn.onclick = function() {
+            map.locate({setView: true, maxZoom: 18});
+        };
+        return btn;
+    };
+    gpsControl.addTo(map);
+
+    var marcadorUsuario;
+    map.on('locationfound', function(e) {
+        if (!marcadorUsuario) {
+            marcadorUsuario = L.circleMarker(e.latlng, {
+                radius: 8, fillColor: "#0fbcf9", color: "#fff", weight: 3, opacity: 1, fillOpacity: 0.9
+            }).addTo(map).bindPopup("Tu ubicación actual").openPopup();
+        } else {
+            marcadorUsuario.setLatLng(e.latlng);
+        }
+    });
+
+    map.on('locationerror', function(e) {
+        alert("No se pudo obtener la ubicación. Verifica tener el GPS encendido y haber dado permisos al navegador.");
+    });
+
     var geojsonLayer;
     var dbExcel = {}; 
     var equipoActivo = "ESTADO_SINABIP";
     const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTPFK63kpF9SASdx-AXGUSA8UnSNxCpfcJbo6SFsF2s8jvvc3b_cbBEbNgyedsOYOtc1sS3cnI3GE75/pub?output=csv";
 
-    // --- LÓGICA DE COLORES POR EQUIPO ACTUALIZADA ---
     function obtenerEstiloPorEquipo(cus) {
         let info = dbExcel[cus];
         let estado = "PENDIENTE";
@@ -164,7 +207,7 @@
             opacidad = 0.75;   
         }
         else if (estado === "PANEL") {
-            color = "#a55eea"; // Nuevo color morado
+            color = "#a55eea"; // Nuevo color morado para Panel
             opacidad = 0.75;
         }
 
@@ -229,13 +272,12 @@
         }
     });
 
-    // --- COLORES DEL POPUP ACTUALIZADOS ---
     function getColorText(estado) {
         if(!estado) return "#d63031";
         estado = estado.toUpperCase().trim();
         if(estado === "TERMINADO") return "#00b894";
         if(estado.includes("PROCESO")) return "#e1b12c";
-        if(estado === "PANEL") return "#9b59b6"; // Color texto Panel
+        if(estado === "PANEL") return "#9b59b6"; 
         return "#d63031";
     }
 
@@ -254,14 +296,12 @@
         setTimeout(() => { map.invalidateSize(); }, 300);
     }
 
-    // --- LÓGICA DE FILTRADO ACTUALIZADA ---
     function filtrarMapa(f) {
         geojsonLayer.eachLayer(l => {
             let info = dbExcel[l.feature.properties.NRO_CUS];
             let est_raw = "PENDIENTE";
             if(info && info[equipoActivo]) est_raw = info[equipoActivo].toUpperCase().trim();
             
-            // Estandarizar estado para la lógica de filtrado exacto
             let est_final = "PENDIENTE";
             if (est_raw === "TERMINADO") est_final = "TERMINADO";
             else if (est_raw.includes("PROCESO")) est_final = "PROCESO";
@@ -275,9 +315,8 @@
         });
     }
 
-    // --- LÓGICA DE ESTADÍSTICAS ACTUALIZADA ---
     function actualizarStats() {
-        let s = { T:0, D:0, P:0, PA:0, PE:0 }; // Se agregó PA (Panel)
+        let s = { T:0, D:0, P:0, PA:0, PE:0 }; 
         
         geojsonLayer.eachLayer(l => {
             let info = dbExcel[l.feature.properties.NRO_CUS];
@@ -287,7 +326,7 @@
             s.T++;
             if(e === "TERMINADO") s.D++; 
             else if(e.includes("PROCESO")) s.P++; 
-            else if(e === "PANEL") s.PA++; // Contador Panel
+            else if(e === "PANEL") s.PA++; 
             else s.PE++;
         });
 
@@ -296,7 +335,6 @@
         document.getElementById('count-process').innerText = s.P;
         document.getElementById('count-pending').innerText = s.PE;
 
-        // Mostrar u ocultar el botón Panel según el equipo activo
         let btnPanel = document.getElementById('btn-panel');
         if (btnPanel) {
             document.getElementById('count-panel').innerText = s.PA;
