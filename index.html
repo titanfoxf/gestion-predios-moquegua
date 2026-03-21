@@ -13,7 +13,6 @@
         :root { --primary: #1e272e; --accent: #0fbcf9; --done: #05c46b; --process: #ffdd59; --panel: #a55eea; --pending: #ff5e57; }
         body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; display: flex; height: 100dvh; background: #f1f2f6; overflow: hidden; }
         
-        /* Panel Lateral Retráctil */
         #sidebar {
             width: 400px; background: var(--primary); color: white; padding: 25px;
             display: flex; flex-direction: column; gap: 20px; z-index: 1001;
@@ -25,7 +24,6 @@
         #map-container { flex-grow: 1; position: relative; display: flex; flex-direction: column; }
         #map { flex-grow: 1; }
 
-        /* Botón para ocultar/mostrar panel */
         .toggle-btn {
             position: absolute; top: 15px; left: 15px; z-index: 1000;
             background: var(--primary); color: white; border: none; padding: 10px 15px;
@@ -34,7 +32,6 @@
         }
         .toggle-btn:hover { background: var(--accent); }
 
-        /* Selector de Equipos */
         .team-selector { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; border-left: 4px solid var(--accent); }
         .team-selector select { width: 100%; padding: 10px; border-radius: 5px; border: none; margin-top: 10px; font-weight: bold; font-size: 14px; cursor: pointer; }
 
@@ -44,7 +41,6 @@
         .filter-btn { border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 11px; color: #1e272e; transition: 0.2s; }
         .filter-btn:active { transform: scale(0.95); }
         
-        /* Estilo del Popup */
         .popup-container { min-width: 250px; color: #2d3436; }
         .popup-title { font-weight: bold; color: var(--primary); border-bottom: 2px solid var(--accent); margin-bottom: 8px; font-size: 14px; padding-bottom: 4px; }
         .data-row { display: flex; justify-content: space-between; margin-bottom: 5px; border-bottom: 1px dotted #ccc; padding-bottom: 2px; }
@@ -56,12 +52,36 @@
 
         .loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary); color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; text-align: center; padding: 20px;}
         
-        /* Créditos del Desarrollador */
         .developer-credit { margin-top: auto; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center; font-size: 11px; color: #a4b0be; line-height: 1.5; }
         .developer-name { color: var(--accent); font-size: 13px; font-weight: bold; letter-spacing: 0.5px; }
         
         .leaflet-control-layers { border-radius: 8px !important; box-shadow: 0 4px 10px rgba(0,0,0,0.2) !important; font-family: 'Segoe UI', sans-serif; font-size: 13px; }
         .leaflet-bottom.leaflet-left { margin-bottom: 25px; }
+
+        /* =========================================
+           ESTILOS PARA ETIQUETAS DINÁMICAS (MÁS PEQUEÑAS)
+           ========================================= */
+        .etiqueta-observ {
+            text-align: center;
+            pointer-events: none; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .etiqueta-observ span {
+            background: rgba(255, 255, 255, 0.85); /* Un poquito más transparente */
+            border: 1px solid #95a5a6;
+            color: #2c3e50;
+            font-size: 8.5px; /* Letra ligeramente más pequeña */
+            font-weight: bold;
+            padding: 1px 4px; /* Menos espacio de relleno para que la caja sea menor */
+            border-radius: 3px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 90px;
+        }
     </style>
 </head>
 <body>
@@ -133,8 +153,17 @@
     var topografia = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17 });
     var oscuro = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 });
 
-    var map = L.map('map', { center: [-17.193, -70.933], zoom: 16, layers: [satelite], zoomControl: false });
+    var map = L.map('map', { 
+        center: [-17.193, -70.933], 
+        zoom: 16, 
+        layers: [satelite], 
+        zoomControl: false,
+        preferCanvas: true 
+    });
     L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+    map.createPane('paneCapaFondo');
+    map.getPane('paneCapaFondo').style.zIndex = 390;
 
     var baseMaps = {
         "🛰️ Satélite (ESRI)": satelite,
@@ -144,7 +173,61 @@
         "⛰️ Topografía (Relieve)": topografia,
         "🗺️ Calles (OSM)": calles
     };
-    L.control.layers(baseMaps, null, { collapsed: false }).addTo(map);
+
+    var capaFondoGroup = L.layerGroup();
+    var overlayMaps = { "🗂️ Datos Catastrales (Fondo)": capaFondoGroup };
+
+    L.control.layers(baseMaps, overlayMaps, { collapsed: false }).addTo(map);
+
+    // --- LÓGICA DE TEXTOS DINÁMICOS ---
+    var etiquetasFondoLayer = L.layerGroup(); 
+    var datosEtiquetasFondo = []; 
+    
+    // AQUÍ ESTÁ EL CAMBIO PRINCIPAL: De 18 pasamos a 19 para exigir más acercamiento
+    var ZOOM_TEXTOS = 19; 
+
+    function renderizarEtiquetasFondo() {
+        if (map.hasLayer(capaFondoGroup) && map.getZoom() >= ZOOM_TEXTOS) {
+            let bounds = map.getBounds().pad(0.1); 
+            
+            datosEtiquetasFondo.forEach(item => {
+                if (!item.center) {
+                    if (item.layer.getBounds) item.center = item.layer.getBounds().getCenter();
+                    else return; 
+                }
+
+                if (bounds.contains(item.center)) {
+                    if (!item.marker) {
+                        item.marker = L.marker(item.center, {
+                            icon: L.divIcon({
+                                className: 'etiqueta-observ',
+                                html: `<span>${item.text}</span>`,
+                                iconSize: [100, 20], // Ajustado un poco más pequeño
+                                iconAnchor: [50, 10]
+                            }),
+                            interactive: false 
+                        });
+                    }
+                    if (!etiquetasFondoLayer.hasLayer(item.marker)) {
+                        etiquetasFondoLayer.addLayer(item.marker);
+                    }
+                } else {
+                    if (item.marker && etiquetasFondoLayer.hasLayer(item.marker)) {
+                        etiquetasFondoLayer.removeLayer(item.marker);
+                    }
+                }
+            });
+
+            if (!map.hasLayer(etiquetasFondoLayer)) map.addLayer(etiquetasFondoLayer);
+        } else {
+            etiquetasFondoLayer.clearLayers();
+            if (map.hasLayer(etiquetasFondoLayer)) map.removeLayer(etiquetasFondoLayer);
+        }
+    }
+
+    map.on('moveend', renderizarEtiquetasFondo);
+    map.on('overlayadd overlayremove', renderizarEtiquetasFondo);
+
 
     // --- GPS ROBUSTO EN TIEMPO REAL ---
     var gpsControl = L.control({position: 'bottomleft'}); 
@@ -161,31 +244,19 @@
         
         btn.onclick = function() {
             if (!isTracking) {
-                // ENCENDER GPS
                 isTracking = true;
                 btn.style.background = '#0fbcf9';
                 btn.style.color = 'white';
                 btn.innerHTML = '🛰️';
                 btn.style.boxShadow = '0 0 15px rgba(15, 188, 249, 0.6)';
-                
-                // Pedimos watch (seguimiento), alta precisión, tiempo máximo de espera 10s
-                map.locate({
-                    watch: true, 
-                    enableHighAccuracy: true, 
-                    maximumAge: 2000, 
-                    timeout: 10000 
-                });
+                map.locate({ watch: true, enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 });
             } else {
-                // APAGAR GPS
                 isTracking = false;
                 btn.style.background = 'white';
                 btn.style.color = 'black';
                 btn.innerHTML = '📍';
                 btn.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
-                
                 map.stopLocate();
-                
-                // Limpiar marcador al apagar
                 if (marcadorUsuario) {
                     map.removeLayer(marcadorUsuario);
                     map.removeLayer(circuloPrecision);
@@ -198,53 +269,30 @@
     };
     gpsControl.addTo(map);
 
-    // Evento cuando llega una actualización de posición
     map.on('locationfound', function(e) {
         var radio = e.accuracy / 2;
-
         if (!marcadorUsuario) {
-            // Es la primera vez que nos ubica al prender el botón
-            circuloPrecision = L.circle(e.latlng, {
-                radius: radio, color: "#0fbcf9", weight: 1, opacity: 0.5, fillOpacity: 0.15
-            }).addTo(map);
-
-            marcadorUsuario = L.circleMarker(e.latlng, {
-                radius: 8, fillColor: "#0fbcf9", color: "#fff", weight: 3, opacity: 1, fillOpacity: 1
-            }).addTo(map);
-            
-            // Centramos la pantalla SOLO la primera vez
-            map.flyTo(e.latlng, 18);
+            circuloPrecision = L.circle(e.latlng, { radius: radio, color: "#0fbcf9", weight: 1, opacity: 0.5, fillOpacity: 0.15 }).addTo(map);
+            marcadorUsuario = L.circleMarker(e.latlng, { radius: 8, fillColor: "#0fbcf9", color: "#fff", weight: 3, opacity: 1, fillOpacity: 1 }).addTo(map);
+            map.flyTo(e.latlng, 19); // Al ubicar por GPS ahora hace un zoom 19 directo
         } else {
-            // Actualizaciones mientras caminamos (solo mueve el punto, no fuerza la pantalla)
             marcadorUsuario.setLatLng(e.latlng);
             circuloPrecision.setLatLng(e.latlng);
             circuloPrecision.setRadius(radio);
         }
     });
 
-    // Evento de fallos de GPS (A prueba de errores)
     map.on('locationerror', function(e) {
         console.error("Error GPS:", e.message);
-        
-        // Apagamos visualmente el botón
         let btn = document.getElementById('btn-gps-field');
-        if(isTracking && btn) {
-            btn.click(); // Simulamos un clic para apagar todo el proceso limpio
-        }
-
-        // Mensajes de error específicos
-        if (e.code === 1) {
-            alert("⚠️ PERMISO DENEGADO: El navegador bloqueó el GPS. Ve a la configuración de Chrome/Safari y permite la ubicación para esta página.");
-        } else if (e.code === 2) {
-            alert("⚠️ SEÑAL NO DISPONIBLE: Enciende el GPS (Ubicación) de tu celular e intenta de nuevo.");
-        } else if (e.code === 3) {
-            alert("⚠️ TIEMPO AGOTADO: La señal es muy débil. Intenta moverte a una zona más despejada (fuera de techos gruesos).");
-        } else {
-            alert("⚠️ Error de ubicación: " + e.message);
-        }
+        if(isTracking && btn) btn.click(); 
+        if (e.code === 1) alert("⚠️ PERMISO DENEGADO: El navegador bloqueó el GPS.");
+        else if (e.code === 2) alert("⚠️ SEÑAL NO DISPONIBLE: Enciende el GPS.");
+        else if (e.code === 3) alert("⚠️ TIEMPO AGOTADO: Señal débil.");
     });
 
-    // --- CARGA DE DATOS GEOJSON Y EXCEL ---
+
+    // --- CARGA DE DATOS ---
     var geojsonLayer;
     var dbExcel = {}; 
     var equipoActivo = "ESTADO_SINABIP";
@@ -254,14 +302,10 @@
         let info = dbExcel[cus];
         let estado = "PENDIENTE";
         if(info && info[equipoActivo]) estado = info[equipoActivo].toUpperCase().trim();
-        
-        let color = "#ff5e57"; 
-        let opacidad = 0.35;    
-
+        let color = "#ff5e57"; let opacidad = 0.35;    
         if (estado === "TERMINADO") { color = "#05c46b"; opacidad = 0.75; } 
         else if (estado.includes("PROCESO")) { color = "#ffdd59"; opacidad = 0.75; }
         else if (estado === "PANEL") { color = "#a55eea"; opacidad = 0.75; }
-
         return { fillColor: color, weight: 1.2, color: 'white', fillOpacity: opacidad };
     }
 
@@ -270,7 +314,7 @@
     Papa.parse(sheetURL, {
         download: true, 
         header: true,
-        error: function(error) { mostrarError("No se pudo descargar la base de datos."); },
+        error: function(error) { mostrarError("No se pudo descargar la base de datos de Google Sheets."); },
         complete: function(results) {
             results.data.forEach(row => {
                 if(row.NRO_CUS) dbExcel[row.NRO_CUS.trim()] = row;
@@ -278,6 +322,32 @@
 
             document.getElementById('loader-text').innerText = "Cargando cartografía GIS...";
 
+            // 1. CARGA DE FONDO CATASTRAL
+            fetch('Fondo.json')
+                .then(res => { if(!res.ok) throw new Error("Fondo.json no disponible"); return res.json(); })
+                .then(data => {
+                    L.geoJSON(data, {
+                        pane: 'paneCapaFondo',
+                        style: {
+                            color: '#bdc3c7', weight: 1, fillColor: '#ecf0f1', fillOpacity: 0.15, interactive: false
+                        },
+                        onEachFeature: function(feature, layer) {
+                            if (feature.properties && feature.properties.OBSERV) {
+                                let obs = feature.properties.OBSERV.trim();
+                                if (obs !== "" && obs.toLowerCase() !== "null") {
+                                    datosEtiquetasFondo.push({ layer: layer, text: obs, marker: null, center: null });
+                                }
+                            }
+                        }
+                    }).addTo(capaFondoGroup);
+                    
+                    renderizarEtiquetasFondo();
+                })
+                .catch(err => {
+                    console.warn("Aviso: Capa de Fondo Catastral ignorada. Detalle:", err.message);
+                });
+
+            // 2. CARGAMOS LA CAPA PRINCIPAL DE INSPECCIÓN
             fetch('PoligonosFER.json')
                 .then(res => { if (!res.ok) throw new Error(`Error HTTP: ${res.status}`); return res.json(); })
                 .then(data => {
@@ -286,7 +356,6 @@
                         onEachFeature: function(f, l) {
                             let c = f.properties.NRO_CUS;
                             let i = dbExcel[c] || {};
-                            
                             l.bindPopup(`
                                 <div class="popup-container">
                                     <div class="popup-title">CUS: ${c}</div>
@@ -310,7 +379,9 @@
                     actualizarStats();
                     document.getElementById('loader').style.display = 'none'; 
                 })
-                .catch(error => { mostrarError("Error al cargar GeoJSON. Verifica el archivo."); });
+                .catch(error => { 
+                    mostrarError("Error crítico al cargar los polígonos principales de inspección (PoligonosFER.json)."); 
+                });
         }
     });
 
@@ -343,7 +414,6 @@
             let info = dbExcel[l.feature.properties.NRO_CUS];
             let est_raw = "PENDIENTE";
             if(info && info[equipoActivo]) est_raw = info[equipoActivo].toUpperCase().trim();
-            
             let est_final = "PENDIENTE";
             if (est_raw === "TERMINADO") est_final = "TERMINADO";
             else if (est_raw.includes("PROCESO")) est_final = "PROCESO";
@@ -356,17 +426,12 @@
 
     function actualizarStats() {
         let s = { T:0, D:0, P:0, PA:0, PE:0 }; 
-        
         geojsonLayer.eachLayer(l => {
             let info = dbExcel[l.feature.properties.NRO_CUS];
             let e = "PENDIENTE";
             if(info && info[equipoActivo]) e = info[equipoActivo].toUpperCase().trim();
-            
             s.T++;
-            if(e === "TERMINADO") s.D++; 
-            else if(e.includes("PROCESO")) s.P++; 
-            else if(e === "PANEL") s.PA++; 
-            else s.PE++;
+            if(e === "TERMINADO") s.D++; else if(e.includes("PROCESO")) s.P++; else if(e === "PANEL") s.PA++; else s.PE++;
         });
 
         document.getElementById('count-all').innerText = s.T;
@@ -377,8 +442,7 @@
         let btnPanel = document.getElementById('btn-panel');
         if (btnPanel) {
             document.getElementById('count-panel').innerText = s.PA;
-            if (equipoActivo === 'ESTADO_INSP_PAN') { btnPanel.style.display = 'block'; } 
-            else { btnPanel.style.display = 'none'; }
+            if (equipoActivo === 'ESTADO_INSP_PAN') { btnPanel.style.display = 'block'; } else { btnPanel.style.display = 'none'; }
         }
     }
 
@@ -394,7 +458,7 @@
                 found = true;
             }
         });
-        if(!found) alert("No se encontró el predio o partida.");
+        if(!found) alert("No se encontró el predio.");
     }
 
     document.getElementById('searchInput').addEventListener('keypress', e => { if(e.key === 'Enter') buscarUniversal(); });
