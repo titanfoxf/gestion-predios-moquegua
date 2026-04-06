@@ -16,54 +16,43 @@
             --pending: #ff5e57;
             --done: #05c46b; 
             --proceso: #ffdd59;     
-            --rd2025: #0984e3;      
-            --rd2026: #00b894;      
-            --rd25sin: #6c5ce7;     
-            --rd26sin: #e84393;     
-            --sinabip: #e17055;     
-            --y2026: #00cec9;       
+            /* Colores Inspección y Panel */
+            --rd2025: #0984e3; --rd2026: #00b894; --rd25sin: #6c5ce7; 
+            --rd26sin: #e84393; --sinabip: #e17055; --y2026: #00cec9;       
         }
         
         body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; display: flex; height: 100dvh; background: #f1f2f6; overflow: hidden; }
-        
         #sidebar { width: 400px; background: var(--primary); color: white; padding: 25px; display: flex; flex-direction: column; gap: 20px; z-index: 1001; box-shadow: 5px 0 15px rgba(0,0,0,0.5); transition: margin-left 0.3s ease; box-sizing: border-box; overflow-y: auto; }
         #sidebar.oculto { margin-left: -400px; }
-
         #map-container { flex-grow: 1; position: relative; display: flex; flex-direction: column; }
         #map { flex-grow: 1; }
-
         .toggle-btn { position: absolute; top: 15px; left: 15px; z-index: 1000; background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-size: 18px; box-shadow: 0 2px 5px rgba(0,0,0,0.3); transition: 0.3s; }
-        .toggle-btn:hover { background: var(--accent); }
-
         .team-selector { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; border-left: 4px solid var(--accent); }
         .team-selector select { width: 100%; padding: 10px; border-radius: 5px; border: none; margin-top: 10px; font-weight: bold; font-size: 14px; cursor: pointer; }
-
         .search-box { background: #34495e; padding: 15px; border-radius: 10px; }
         .search-box input { width: 100%; padding: 10px; border-radius: 5px; border: none; box-sizing: border-box; }
-        
         .filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .filter-btn { border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 10.5px; color: #1e272e; transition: 0.2s; }
-        .filter-btn:active { transform: scale(0.95); }
-        
         .popup-container { min-width: 250px; color: #2d3436; }
         .popup-title { font-weight: bold; color: var(--primary); border-bottom: 2px solid var(--accent); margin-bottom: 8px; font-size: 14px; padding-bottom: 4px; }
         .data-row { display: flex; justify-content: space-between; margin-bottom: 5px; border-bottom: 1px dotted #ccc; padding-bottom: 2px; }
         .label { font-weight: bold; color: #636e72; font-size: 10px; text-transform: uppercase; }
-        .value { font-size: 12px; font-weight: 500; }
-        
-        .status-box { background: #f1f2f6; padding: 8px; border-radius: 5px; margin-top: 10px; }
+        .status-box { background: #f1f2f6; padding: 8px; border-radius: 5px; margin-top: 10px; margin-bottom: 10px; }
         .status-item { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 3px; font-weight: bold; }
-
         .loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary); color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; text-align: center; padding: 20px;}
-        
-        .developer-credit { margin-top: auto; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center; font-size: 11px; color: #a4b0be; line-height: 1.5; }
-        .developer-name { color: var(--accent); font-size: 13px; font-weight: bold; letter-spacing: 0.5px; }
-        
-        .leaflet-control-layers { border-radius: 8px !important; box-shadow: 0 4px 10px rgba(0,0,0,0.2) !important; font-family: 'Segoe UI', sans-serif; font-size: 13px; }
+        .developer-credit { margin-top: auto; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center; font-size: 11px; color: #a4b0be; }
+        .developer-name { color: var(--accent); font-size: 13px; font-weight: bold; }
+        .leaflet-control-layers { border-radius: 8px !important; box-shadow: 0 4px 10px rgba(0,0,0,0.2) !important; font-size: 13px; }
         .leaflet-bottom.leaflet-left { margin-bottom: 25px; }
 
         .etiqueta-observ { text-align: center; pointer-events: none; display: flex; justify-content: center; align-items: center; }
         .etiqueta-observ span { background: rgba(255, 255, 255, 0.85); border: 1px solid #95a5a6; color: #2c3e50; font-size: 8.5px; font-weight: bold; padding: 1px 4px; border-radius: 3px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90px; }
+        
+        .photo-btn { display: flex; align-items: center; justify-content: center; gap: 8px; background: #0984e3; color: white !important; text-decoration: none; padding: 8px; border-radius: 5px; font-size: 12px; font-weight: bold; transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .photo-btn:hover { background: #74b9ff; transform: translateY(-1px); }
+
+        #batch-container { display: none; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; border-left: 4px solid #f1c40f; }
+        #batch-input { width: 100%; height: 140px; border-radius: 5px; padding: 10px; box-sizing: border-box; border: none; font-family: monospace; font-size: 12px; resize: vertical; background: #34495e; color: white; }
     </style>
 </head>
 <body>
@@ -80,12 +69,12 @@
     </div>
 
     <div class="team-selector">
-        <div style="font-size: 12px; font-weight: bold; color: #dcdde1;">VISUALIZAR AVANCE DE EQUIPO:</div>
         <select id="equipoSelect" onchange="cambiarEquipoActivo()">
             <option value="ESTADO_SINABIP">📊 Equipo SINABIP</option>
             <option value="ESTADO_RD">📊 Equipo RD</option>
             <option value="ESTADO_ITJ">📊 Equipo ITJ</option>
             <option value="ESTADO_INSP_PAN">📊 Inspección y Panel</option>
+            <option value="BUSCAR_CANTIDAD">📋 Búsqueda Masiva (Excel)</option>
         </select>
     </div>
     
@@ -94,35 +83,32 @@
         <button onclick="buscarUniversal()" style="width:100%; margin-top:8px; padding:8px; background:var(--accent); border:none; color:white; border-radius:5px; cursor:pointer; font-weight:bold;">BUSCAR</button>
     </div>
 
+    <div id="batch-container">
+        <div style="font-size: 11px; font-weight: bold; margin-bottom: 8px; color: #dcdde1;">PEGA LA LISTA DE CUS AQUÍ (Uno por línea):</div>
+        <textarea id="batch-input" placeholder="Ejemplo:&#10;161467&#10;161638&#10;53995"></textarea>
+        <button onclick="ejecutarBatch()" style="width: 100%; margin-top: 10px; padding: 10px; background: #f1c40f; border: none; color: #1e272e; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s;">🔍 PROYECTAR EN MAPA</button>
+        <div id="batch-results" style="font-size: 12px; margin-top: 10px; color: #0fbcf9; text-align: center; font-weight: bold;"></div>
+    </div>
+
     <div class="filter-grid">
         <button class="filter-btn" style="background: #a4b0be; grid-column: span 2;" onclick="filtrarMapa('TODOS')">TODOS (<span id="count-all">-</span>)</button>
-        
-        <button class="filter-btn btn-otros" style="background: var(--done); color: white;" onclick="filtrarMapa('TERMINADO')">TERMINADO (<span id="count-done">-</span>)</button>
-        <button class="filter-btn btn-otros" style="background: var(--proceso);" onclick="filtrarMapa('PROCESO')">PROCESO (<span id="count-process">-</span>)</button>
-
-        <button class="filter-btn btn-insp" style="background: var(--rd2025); color: white; display: none;" onclick="filtrarMapa('RD2025')">RD2025 (<span id="count-rd2025">-</span>)</button>
-        <button class="filter-btn btn-insp" style="background: var(--rd2026); color: white; display: none;" onclick="filtrarMapa('RD2026')">RD2026 (<span id="count-rd2026">-</span>)</button>
-        <button class="filter-btn btn-insp" style="background: var(--rd25sin); color: white; display: none;" onclick="filtrarMapa('RD2025-SINABIP')">RD25-SINABIP (<span id="count-rd25sin">-</span>)</button>
-        <button class="filter-btn btn-insp" style="background: var(--rd26sin); color: white; display: none;" onclick="filtrarMapa('RD2026-SINABIP')">RD26-SINABIP (<span id="count-rd26sin">-</span>)</button>
-        <button class="filter-btn btn-insp" style="background: var(--sinabip); color: white; display: none;" onclick="filtrarMapa('SINABIP')">SINABIP (<span id="count-sinabip">-</span>)</button>
-        <button class="filter-btn btn-insp" style="background: var(--y2026); color: white; display: none;" onclick="filtrarMapa('2026')">2026 (<span id="count-2026">-</span>)</button>
-        <button class="filter-btn btn-insp" style="background: var(--proceso); display: none;" onclick="filtrarMapa('EN PROCESO')">EN PROCESO (<span id="count-enproceso">-</span>)</button>
-
+        <button class="filter-btn" id="btn-terminado" style="background: var(--done); color: white;" onclick="filtrarMapa('TERMINADO')">TERMINADOS (<span id="count-done">-</span>)</button>
+        <button class="filter-btn" id="btn-proceso" style="background: var(--proceso);" onclick="filtrarMapa('PROCESO')">PROCESO (<span id="count-process">-</span>)</button>
         <button class="filter-btn" id="btn-pendiente" style="background: var(--pending); color: white; grid-column: span 2;" onclick="filtrarMapa('PENDIENTE')">PENDIENTE (<span id="count-pending">-</span>)</button>
     </div>
 
-    <div class="developer-credit">Plataforma GIS Desarrollada por:<br><div class="developer-name">Ing. Fernando Huancapaza Zea</div></div>
+    <div class="developer-credit">Plataforma GIS por:<br><div class="developer-name">Ing. Fernando Huancapaza Zea</div></div>
 </div>
 
 <div id="map-container">
-    <button class="toggle-btn" onclick="toggleSidebar()" title="Ocultar/Mostrar Panel">☰</button>
+    <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
     <div id="map"></div>
 </div>
 
 <script>
     function mostrarError(mensajeError) {
         const loader = document.getElementById('loader');
-        loader.innerHTML = `<h2 style="color: var(--pending)">⚠️ ERROR DE CONEXIÓN</h2><p>${mensajeError}</p><button onclick="location.reload()">Reintentar</button>`;
+        loader.innerHTML = `<h2 style="color: var(--pending)">⚠️ ERROR</h2><p>${mensajeError}</p><button onclick="location.reload()">Reintentar</button>`;
     }
 
     var googleSatelite = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', { maxZoom: 21, attribution: '© Google' });
@@ -133,64 +119,49 @@
     L.control.zoom({ position: 'bottomright' }).addTo(map);
     map.createPane('paneCapaFondo'); map.getPane('paneCapaFondo').style.zIndex = 390;
 
-    var baseMaps = { "🛰️ Google Satélite": googleSatelite, "🌍 Google Híbrido (Con Calles)": googleHibrido, "🌙 Mapa Oscuro (Resaltado)": oscuro };
-
-    var capaFondoGroup = L.layerGroup(); 
-    var etiquetasFondoLayer = L.layerGroup(); 
+    var baseMaps = { "🛰️ Google Satélite": googleSatelite, "🌍 Google Híbrido": googleHibrido, "🌙 Mapa Oscuro": oscuro };
+    var capaFondoGroup = L.layerGroup(); var etiquetasFondoLayer = L.layerGroup(); 
     var overlayMaps = { "🗂️ Polígonos Catastrales": capaFondoGroup, "🔤 Textos Catastrales": etiquetasFondoLayer };
     L.control.layers(baseMaps, overlayMaps, { collapsed: false }).addTo(map);
 
-    // --- LÓGICA DE TEXTOS CON ESCÁNER ESPACIAL ---
-    var datosEtiquetasFondo = []; 
-    var ZOOM_TEXTOS = 19; 
-    var poligonosVisibles = []; // Almacenará las "cajas" de los polígonos coloreados activos
-    
+    var datosEtiquetasFondo = []; var ZOOM_TEXTOS = 19; 
+    var poligonosVisibles = [];
+
     function renderizarEtiquetasFondo() {
         if (map.hasLayer(etiquetasFondoLayer)) {
             if (map.getZoom() >= ZOOM_TEXTOS) {
                 let bounds = map.getBounds().pad(0.1); 
-                
                 datosEtiquetasFondo.forEach(item => {
                     if (!item.center) { if (item.layer.getBounds) item.center = item.layer.getBounds().getCenter(); else return; }
                     
-                    // 1. Validamos que el texto esté dentro de nuestra pantalla
                     if (bounds.contains(item.center)) {
-                        
-                        // 2. NUEVO: Validamos que pertenezca a un polígono que esté VISIBLE en ese momento
                         let esVisibleEnColor = false;
                         if (poligonosVisibles.length > 0) {
                             for (let i = 0; i < poligonosVisibles.length; i++) {
                                 if (poligonosVisibles[i].getBounds().contains(item.center)) {
-                                    esVisibleEnColor = true;
-                                    break;
+                                    esVisibleEnColor = true; break;
                                 }
                             }
                         }
-
                         if (esVisibleEnColor) {
                             if (!item.marker) item.marker = L.marker(item.center, { icon: L.divIcon({ className: 'etiqueta-observ', html: `<span>${item.text}</span>`, iconSize: [100, 20], iconAnchor: [50, 10] }), interactive: false });
                             if (!etiquetasFondoLayer.hasLayer(item.marker)) etiquetasFondoLayer.addLayer(item.marker);
                         } else {
                             if (item.marker && etiquetasFondoLayer.hasLayer(item.marker)) etiquetasFondoLayer.removeLayer(item.marker);
                         }
-                    } else {
-                        if (item.marker && etiquetasFondoLayer.hasLayer(item.marker)) etiquetasFondoLayer.removeLayer(item.marker);
+                    } else if (item.marker && etiquetasFondoLayer.hasLayer(item.marker)) {
+                        etiquetasFondoLayer.removeLayer(item.marker);
                     }
                 });
-            } else {
-                etiquetasFondoLayer.clearLayers(); 
-            }
+            } else { etiquetasFondoLayer.clearLayers(); }
         }
     }
-    
-    map.on('moveend zoomend', renderizarEtiquetasFondo); 
-    map.on('overlayadd overlayremove', renderizarEtiquetasFondo);
+    map.on('moveend zoomend overlayadd overlayremove', renderizarEtiquetasFondo);
 
-    // --- GPS ---
     var gpsControl = L.control({position: 'bottomleft'}); var isTracking = false; var marcadorUsuario = null; var circuloPrecision = null;
     gpsControl.onAdd = function (map) {
         var btn = L.DomUtil.create('button', 'leaflet-bar'); btn.id = 'btn-gps-field'; btn.innerHTML = '📍';
-        btn.style.cssText = 'background: white; border: 2px solid rgba(0,0,0,0.2); border-radius: 8px; width: 48px; height: 48px; cursor: pointer; font-size: 24px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; margin-left: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.3); transition: all 0.3s ease;';
+        btn.style.cssText = 'background: white; border: 2px solid rgba(0,0,0,0.2); border-radius: 8px; width: 48px; height: 48px; cursor: pointer; font-size: 24px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; margin-left: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.3);';
         btn.onclick = function() {
             if (!isTracking) {
                 isTracking = true; btn.style.background = '#0fbcf9'; btn.style.color = 'white'; btn.innerHTML = '🛰️';
@@ -210,157 +181,193 @@
             map.flyTo(e.latlng, 19);
         } else { marcadorUsuario.setLatLng(e.latlng); circuloPrecision.setLatLng(e.latlng); circuloPrecision.setRadius(radio); }
     });
-    map.on('locationerror', function(e) {
-        let btn = document.getElementById('btn-gps-field'); if(isTracking && btn) btn.click(); 
-        if (e.code === 1) alert("⚠️ PERMISO DENEGADO."); else if (e.code === 2) alert("⚠️ SEÑAL NO DISPONIBLE."); else if (e.code === 3) alert("⚠️ TIEMPO AGOTADO.");
-    });
 
-    // --- CARGA DE DATOS ---
     var geojsonLayer; var dbExcel = {}; var equipoActivo = "ESTADO_SINABIP";
     const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTPFK63kpF9SASdx-AXGUSA8UnSNxCpfcJbo6SFsF2s8jvvc3b_cbBEbNgyedsOYOtc1sS3cnI3GE75/pub?output=csv";
 
     function obtenerEstiloPorEquipo(cus) {
-        let info = dbExcel[cus];
-        let estado = "PENDIENTE";
-        if(info && info[equipoActivo]) estado = info[equipoActivo].toUpperCase().trim();
-        
-        let color = "#ff5e57"; 
-        let opacidad = 0.75;    
+        if (equipoActivo === 'BUSCAR_CANTIDAD') {
+            // AJUSTE: Opacidad bajada a 0.4 para dar transparencia
+            return { fillColor: '#f1c40f', weight: 2, color: '#ffffff', fillOpacity: 0.4 };
+        }
 
+        let info = dbExcel[cus]; let estado = "PENDIENTE";
+        if(info && info[equipoActivo]) estado = info[equipoActivo].toUpperCase().trim();
+        let color = "#ff5e57"; let opacidad = 0.75;    
+        
         if (equipoActivo === 'ESTADO_INSP_PAN') {
-            if (estado === "RD2025") color = "#0984e3"; 
-            else if (estado === "RD2026") color = "#00b894"; 
-            else if (estado === "RD2025-SINABIP") color = "#6c5ce7"; 
-            else if (estado === "RD2026-SINABIP") color = "#e84393"; 
-            else if (estado === "SINABIP") color = "#e17055"; 
-            else if (estado === "2026") color = "#00cec9"; 
-            else if (estado === "EN PROCESO") color = "#ffdd59"; 
-            else { opacidad = 0.35; color = "#ff5e57"; } 
+            if (estado === "RD2025") color = "#0984e3"; else if (estado === "RD2026") color = "#00b894"; 
+            else if (estado === "RD2025-SINABIP") color = "#6c5ce7"; else if (estado === "RD2026-SINABIP") color = "#e84393"; 
+            else if (estado === "SINABIP") color = "#e17055"; else if (estado === "2026") color = "#00cec9"; 
+            else if (estado === "EN PROCESO") color = "#ffdd59"; else { opacidad = 0.35; color = "#ff5e57"; } 
         } else {
-            if (estado === "TERMINADO") color = "#05c46b"; 
-            else if (estado.includes("PROCESO")) color = "#ffdd59"; 
+            if (estado === "TERMINADO") color = "#05c46b"; else if (estado.includes("PROCESO")) color = "#ffdd59"; 
             else { opacidad = 0.35; color = "#ff5e57"; } 
         }
-        
         return { fillColor: color, weight: 1.2, color: 'white', fillOpacity: opacidad };
     }
 
-    document.getElementById('loader-text').innerText = "Conectando con Google Sheets...";
     Papa.parse(sheetURL, {
         download: true, header: true,
         complete: function(results) {
             results.data.forEach(row => { if(row.NRO_CUS) dbExcel[row.NRO_CUS.trim()] = row; });
-            document.getElementById('loader-text').innerText = "Cargando cartografía GIS...";
-
-            fetch('Fondo.json')
-                .then(res => res.json())
-                .then(data => {
-                    L.geoJSON(data, {
-                        pane: 'paneCapaFondo',
-                        style: { color: '#7f8c8d', weight: 0.8, opacity: 0.7, fillColor: '#ecf0f1', fillOpacity: 0.0, interactive: false },
-                        onEachFeature: function(feature, layer) {
-                            if (feature.properties && feature.properties.OBSERV) {
-                                let obs = feature.properties.OBSERV.trim();
-                                if (obs !== "" && obs.toLowerCase() !== "null") datosEtiquetasFondo.push({ layer: layer, text: obs, marker: null, center: null });
-                            }
+            
+            fetch('Fondo.json').then(res => res.json()).then(data => {
+                L.geoJSON(data, {
+                    pane: 'paneCapaFondo',
+                    style: { color: '#00e5ff', weight: 1.5, opacity: 0.9, fillOpacity: 0.0, interactive: false },
+                    onEachFeature: function(feature, layer) {
+                        if (feature.properties && feature.properties.OBSERV) {
+                            let obs = feature.properties.OBSERV.trim();
+                            if (obs !== "" && obs.toLowerCase() !== "null") datosEtiquetasFondo.push({ layer: layer, text: obs, marker: null, center: null });
                         }
-                    }).addTo(capaFondoGroup);
-                }).catch(err => { console.warn("Capa de Fondo ignorada.", err.message); });
+                    }
+                }).addTo(capaFondoGroup);
+            });
 
-            fetch('PoligonosFER.json')
-                .then(res => res.json())
-                .then(data => {
-                    geojsonLayer = L.geoJSON(data, {
-                        style: function(f) { return obtenerEstiloPorEquipo(f.properties.NRO_CUS); },
-                        onEachFeature: function(f, l) {
-                            let c = f.properties.NRO_CUS; let i = dbExcel[c] || {};
-                            l.bindPopup(`
-                                <div class="popup-container">
-                                    <div class="popup-title">CUS: ${c}</div>
-                                    <div class="data-row"><span class="label">Partida (PE):</span><span class="value">${i.PE || 'S/N'}</span></div>
-                                    <div class="data-row"><span class="label">Sector / MZ / Lote:</span><span class="value">${i.SECTOR || '-'} | ${i.MZ || '-'} | ${i.LOTE || '-'}</span></div>
-                                    <div class="data-row" style="border:none; margin-top:5px;"><span class="label">Propietario:</span></div>
-                                    <div style="background:#dfe6e9; padding:5px; border-radius:4px; font-size:11px; margin-bottom:5px;">${i.PROPIETARI || 'NO IDENTIFICADO'}</div>
+            fetch('PoligonosFER.json').then(res => res.json()).then(data => {
+                
+                function getApproxArea(feature) {
+                    if (!feature.geometry || !feature.geometry.coordinates) return 0;
+                    let coords = feature.geometry.coordinates.flat(Infinity);
+                    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                    for(let i=0; i<coords.length; i+=2) {
+                        if(coords[i] < minX) minX = coords[i];
+                        if(coords[i] > maxX) maxX = coords[i];
+                        if(coords[i+1] < minY) minY = coords[i+1];
+                        if(coords[i+1] > maxY) maxY = coords[i+1];
+                    }
+                    return (maxX - minX) * (maxY - minY);
+                }
+                data.features.sort((a, b) => getApproxArea(b) - getApproxArea(a));
+
+                geojsonLayer = L.geoJSON(data, {
+                    style: function(f) { return obtenerEstiloPorEquipo(f.properties.NRO_CUS); },
+                    onEachFeature: function(f, l) {
+                        let c = f.properties.NRO_CUS; let i = dbExcel[c] || {};
+                        let urlFoto = `https://storage.googleapis.com/catastro-moquegua.firebasestorage.app/Captura_${c}.webp`;
+                        
+                        l.bindPopup(`
+                            <div class="popup-container">
+                                <div class="popup-title">CUS: ${c}</div>
+                                <div class="data-row"><span class="label">PE:</span><span>${i.PE || 'S/N'}</span></div>
+                                
+                                <div class="status-box">
+                                    <div class="status-item"><span>SINABIP:</span><span style="color:${getColorText(i.ESTADO_SINABIP)}">${i.ESTADO_SINABIP || 'P'}</span></div>
+                                    <div class="status-item"><span>RD:</span><span style="color:${getColorText(i.ESTADO_RD)}">${i.ESTADO_RD || 'P'}</span></div>
+                                    <div class="status-item"><span>INSP:</span><span style="color:${getColorText(i.ESTADO_INSP_PAN)}">${i.ESTADO_INSP_PAN || 'P'}</span></div>
                                 </div>
-                            `);
-                        }
-                    });
-                    
-                    // Llamamos a filtrarMapa en lugar de addTo para inicializar 'poligonosVisibles'
-                    filtrarMapa('TODOS');
-                    actualizarStats();
-                    document.getElementById('loader').style.display = 'none'; 
-                });
+                                
+                                <a href="${urlFoto}" target="_blank" class="photo-btn">
+                                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                        <path d="M10.5 8.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/>
+                                        <path d="M2 4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-1.172a2 2 0 0 1-1.414-.586l-.828-.828A2 2 0 0 0 9.172 2H6.828a2 2 0 0 0-1.414.586l-.828.828A2 2 0 0 1 3.172 4H2zm.5 2a.5.5 0 1 1 0-1 .5.5 0 0 1 0 1zm9 2.5a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0z"/>
+                                    </svg>
+                                    Ver Captura Sinabip
+                                </a>
+                            </div>
+                        `);
+                    }
+                }).addTo(map);
+                filtrarMapa('TODOS'); actualizarStats(); document.getElementById('loader').style.display = 'none'; 
+            });
         }
     });
 
-    function cambiarEquipoActivo() {
-        equipoActivo = document.getElementById('equipoSelect').value;
-        geojsonLayer.eachLayer(function(layer) { layer.setStyle(obtenerEstiloPorEquipo(layer.feature.properties.NRO_CUS)); });
-        filtrarMapa('TODOS');
-        actualizarStats();
+    function getColorText(e) { if(!e) return "#d63031"; e = e.toUpperCase(); if(e === "TERMINADO" || e === "RD2026") return "#00b894"; if(e.includes("PROCESO") || e === "RD2025") return "#0984e3"; return "#d63031"; }
+    
+    function cambiarEquipoActivo() { 
+        equipoActivo = document.getElementById('equipoSelect').value; 
+        
+        let batchCont = document.getElementById('batch-container');
+        let filterGrid = document.querySelector('.filter-grid');
+        let searchBox = document.querySelector('.search-box');
+
+        if (equipoActivo === 'BUSCAR_CANTIDAD') {
+            batchCont.style.display = 'block';
+            filterGrid.style.display = 'none';
+            searchBox.style.display = 'none';
+            
+            geojsonLayer.eachLayer(l => map.removeLayer(l));
+            document.getElementById('count-all').innerText = "0";
+            document.getElementById('batch-results').innerHTML = "";
+            poligonosVisibles = [];
+            renderizarEtiquetasFondo();
+        } else {
+            batchCont.style.display = 'none';
+            filterGrid.style.display = 'grid';
+            searchBox.style.display = 'block';
+
+            geojsonLayer.eachLayer(l => l.setStyle(obtenerEstiloPorEquipo(l.feature.properties.NRO_CUS))); 
+            filtrarMapa('TODOS'); 
+            actualizarStats(); 
+        }
     }
 
-    function toggleSidebar() { let sidebar = document.getElementById('sidebar'); sidebar.classList.toggle('oculto'); setTimeout(() => { map.invalidateSize(); }, 300); }
+    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('oculto'); setTimeout(() => map.invalidateSize(), 300); }
 
     function filtrarMapa(f) {
-        poligonosVisibles = []; // Reiniciamos la lista de polígonos activos en pantalla
-
+        poligonosVisibles = [];
         geojsonLayer.eachLayer(l => {
-            let info = dbExcel[l.feature.properties.NRO_CUS];
+            let info = dbExcel[l.feature.properties.NRO_CUS]; 
             let est_raw = "PENDIENTE";
             if(info && info[equipoActivo]) est_raw = info[equipoActivo].toUpperCase().trim();
             
-            let est_final = "PENDIENTE";
+            let mostrar = false;
             
-            if (equipoActivo === 'ESTADO_INSP_PAN') {
-                if (["RD2025", "RD2026", "RD2025-SINABIP", "RD2026-SINABIP", "SINABIP", "2026", "EN PROCESO"].includes(est_raw)) {
-                    est_final = est_raw;
-                }
+            if (f === 'TODOS') {
+                mostrar = true;
+            } else if (equipoActivo === 'ESTADO_INSP_PAN') {
+                let esGrupoTerminado = ["RD2025", "RD2026", "RD2025-SINABIP", "RD2026-SINABIP", "SINABIP", "2026"].includes(est_raw);
+                if (f === 'TERMINADO' && esGrupoTerminado) mostrar = true;
+                else if (f === 'PROCESO' && est_raw === "EN PROCESO") mostrar = true;
+                else if (f === 'PENDIENTE' && !esGrupoTerminado && est_raw !== "EN PROCESO") mostrar = true;
             } else {
-                if (est_raw === "TERMINADO") est_final = "TERMINADO";
-                else if (est_raw.includes("PROCESO")) est_final = "PROCESO";
+                if (f === 'TERMINADO' && est_raw === "TERMINADO") mostrar = true;
+                else if (f === 'PROCESO' && est_raw.includes("PROCESO")) mostrar = true;
+                else if (f === 'PENDIENTE' && est_raw !== "TERMINADO" && !est_raw.includes("PROCESO")) mostrar = true;
             }
 
-            if (f === 'TODOS' || est_final === f) { 
+            if (mostrar) { 
                 map.addLayer(l); 
-                poligonosVisibles.push(l); // Guardamos referencia para los textos
+                poligonosVisibles.push(l); 
             } else { 
                 map.removeLayer(l); 
             }
         });
-        
-        // Al cambiar el filtro, recalcula los textos para que coincidan con la nueva vista
         renderizarEtiquetasFondo();
     }
 
     function actualizarStats() {
-        let s = { T:0, PE:0, D:0, P:0, RD25:0, RD26:0, RDS25:0, RDS26:0, SIN:0, Y26:0, ENP:0 }; 
+        let s = { T:0, D:0, P:0, PE:0 }; 
         geojsonLayer.eachLayer(l => {
             let info = dbExcel[l.feature.properties.NRO_CUS]; let e = "PENDIENTE";
             if(info && info[equipoActivo]) e = info[equipoActivo].toUpperCase().trim();
             s.T++;
+            
             if (equipoActivo === 'ESTADO_INSP_PAN') {
-                if (e === "RD2025") s.RD25++; else if (e === "RD2026") s.RD26++; else if (e === "RD2025-SINABIP") s.RDS25++; 
-                else if (e === "RD2026-SINABIP") s.RDS26++; else if (e === "SINABIP") s.SIN++; else if (e === "2026") s.Y26++; 
-                else if (e === "EN PROCESO") s.ENP++; else s.PE++;
+                if (["RD2025", "RD2026", "RD2025-SINABIP", "RD2026-SINABIP", "SINABIP", "2026"].includes(e)) {
+                    s.D++; 
+                } else if (e === "EN PROCESO") {
+                    s.P++;
+                } else {
+                    s.PE++; 
+                }
             } else {
                 if (e === "TERMINADO") s.D++; else if (e.includes("PROCESO")) s.P++; else s.PE++;
             }
         });
 
-        document.getElementById('count-all').innerText = s.T; document.getElementById('count-pending').innerText = s.PE;
-        let btnsInsp = document.querySelectorAll('.btn-insp'); let btnsOtros = document.querySelectorAll('.btn-otros'); let btnPendiente = document.getElementById('btn-pendiente');
+        document.getElementById('count-all').innerText = s.T; 
+        document.getElementById('count-done').innerText = s.D;
+        document.getElementById('count-process').innerText = s.P;
+        document.getElementById('count-pending').innerText = s.PE;
 
+        let btnPendiente = document.getElementById('btn-pendiente');
         if (equipoActivo === 'ESTADO_INSP_PAN') {
-            document.getElementById('count-rd2025').innerText = s.RD25; document.getElementById('count-rd2026').innerText = s.RD26;
-            document.getElementById('count-rd25sin').innerText = s.RDS25; document.getElementById('count-rd26sin').innerText = s.RDS26;
-            document.getElementById('count-sinabip').innerText = s.SIN; document.getElementById('count-2026').innerText = s.Y26;
-            document.getElementById('count-enproceso').innerText = s.ENP;
-            btnsInsp.forEach(b => b.style.display = 'block'); btnsOtros.forEach(b => b.style.display = 'none'); btnPendiente.style.gridColumn = 'span 1'; 
+            btnPendiente.style.gridColumn = 'span 2'; 
         } else {
-            document.getElementById('count-done').innerText = s.D; document.getElementById('count-process').innerText = s.P;
-            btnsInsp.forEach(b => b.style.display = 'none'); btnsOtros.forEach(b => b.style.display = 'block'); btnPendiente.style.gridColumn = 'span 2'; 
+            btnPendiente.style.gridColumn = 'span 2'; 
         }
     }
 
@@ -368,12 +375,51 @@
         let v = document.getElementById('searchInput').value.toLowerCase().trim(); let found = false;
         geojsonLayer.eachLayer(l => {
             let cus = l.feature.properties.NRO_CUS; let info = dbExcel[cus] || {};
-            let bString = `${cus} ${info.PROPIETARI} ${info.PE} ${info.MZ}`.toLowerCase();
+            let bString = `${cus} ${info.PROPIETARI} ${info.PE}`.toLowerCase();
             if(bString.includes(v)) { if(!found) { map.flyTo(l.getBounds().getCenter(), 19); l.openPopup(); } found = true; }
         });
         if(!found) alert("No se encontró el predio o partida.");
     }
     document.getElementById('searchInput').addEventListener('keypress', e => { if(e.key === 'Enter') buscarUniversal(); });
+
+    function ejecutarBatch() {
+        let text = document.getElementById('batch-input').value;
+        let batchCusList = text.split(/[\n,\t ]+/).map(s => s.trim()).filter(s => s !== "");
+        
+        if(batchCusList.length === 0) {
+            alert("Por favor pega al menos un CUS en el cuadro.");
+            return;
+        }
+
+        let encontrados = 0;
+        let bounds = L.latLngBounds();
+        poligonosVisibles = [];
+
+        geojsonLayer.eachLayer(l => {
+            let cus = l.feature.properties.NRO_CUS;
+            if (cus && batchCusList.includes(cus.toString())) {
+                map.addLayer(l);
+                // AJUSTE: Opacidad bajada a 0.4 aquí también al ejecutar
+                l.setStyle({ fillColor: '#f1c40f', weight: 2, color: '#ffffff', fillOpacity: 0.4 });
+                encontrados++;
+                bounds.extend(l.getBounds());
+                poligonosVisibles.push(l);
+            } else {
+                map.removeLayer(l);
+            }
+        });
+
+        document.getElementById('batch-results').innerHTML = `Mostrando en mapa: <b>${encontrados}</b> de <b>${batchCusList.length}</b> ingresados.`;
+        document.getElementById('count-all').innerText = encontrados;
+        
+        renderizarEtiquetasFondo();
+
+        if (encontrados > 0) {
+            map.fitBounds(bounds, { padding: [30, 30] });
+        } else {
+            alert("Ninguno de los CUS ingresados existe en la base de datos GIS.");
+        }
+    }
 </script>
 </body>
 </html>
