@@ -70,21 +70,15 @@
         #batch-container { display: none; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; border-left: 4px solid #f1c40f; }
         #batch-input { width: 100%; height: 140px; border-radius: 5px; padding: 10px; box-sizing: border-box; border: none; font-family: monospace; font-size: 12px; resize: vertical; background: #34495e; color: white; }
 
-        .opacity-control { position: absolute; top: 14px; right: 225px; z-index: 1000; background: rgba(20,26,33,0.9); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 10px; min-width: 170px; box-shadow: 0 4px 12px rgba(0,0,0,0.35); }
+        .opacity-control { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 1000; background: rgba(20,26,33,0.9); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 8px 10px; min-width: 180px; box-shadow: 0 4px 12px rgba(0,0,0,0.35); }
         .opacity-title { color: #dfe6e9; font-size: 11px; font-weight: 700; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.3px; }
         .opacity-row { display: flex; align-items: center; gap: 8px; }
         #opacity-slider { width: 100%; }
         #opacity-value { color: #81ecec; font-size: 11px; font-weight: 700; min-width: 36px; text-align: right; }
-
-        .compass-control { position: absolute; right: 14px; bottom: 108px; z-index: 1000; background: rgba(20,26,33,0.9); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 8px; width: 88px; box-shadow: 0 4px 12px rgba(0,0,0,0.35); text-align: center; }
-        .compass-dial { width: 56px; height: 56px; margin: 0 auto 6px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.35); position: relative; background: radial-gradient(circle at center, rgba(255,255,255,0.08), rgba(255,255,255,0.02)); }
-        .compass-n { position: absolute; top: 2px; left: 0; right: 0; color: #e84393; font-size: 10px; font-weight: 700; }
-        .compass-needle { position: absolute; top: 50%; left: 50%; width: 24px; height: 24px; margin-left: -12px; margin-top: -18px; transform-origin: center 16px; transition: transform 0.2s linear; }
-        .compass-needle::before,
-        .compass-needle::after { content: ""; position: absolute; width: 12px; height: 3px; background: #ffffff; top: 8px; border-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.45); }
-        .compass-needle::before { left: 1px; transform: rotate(-40deg); transform-origin: right center; }
-        .compass-needle::after { right: 1px; transform: rotate(40deg); transform-origin: left center; }
-        .compass-readout { font-size: 10px; color: #dfe6e9; font-weight: 700; }
+        .orientation-row { margin-top: 6px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .orientation-state { color: #b2bec3; font-size: 10px; font-weight: 700; white-space: nowrap; }
+        #orientation-mode-btn { border: none; border-radius: 5px; padding: 5px 8px; font-size: 10px; font-weight: 700; cursor: pointer; background: #2d3436; color: #dfe6e9; }
+        #orientation-mode-btn.real { background: #00b894; color: #052b23; }
 
         .user-heading-marker { background: transparent; border: none; }
         .user-heading-wrap { width: 34px; height: 34px; position: relative; }
@@ -92,8 +86,7 @@
         .user-heading-dot { width: 12px; height: 12px; border-radius: 50%; background: #0fbcf9; border: 2px solid #fff; position: absolute; left: 11px; top: 19px; box-shadow: 0 0 0 1px rgba(0,0,0,0.2); }
 
         @media (max-width: 768px) {
-            .compass-control { right: 10px; bottom: 104px; width: 82px; }
-            .opacity-control { top: 12px; right: 196px; min-width: 150px; }
+            .opacity-control { bottom: 14px; min-width: 160px; }
         }
     </style>
 </head>
@@ -176,13 +169,10 @@
             <input id="opacity-slider" type="range" min="10" max="100" step="1" value="100">
             <span id="opacity-value">100%</span>
         </div>
-    </div>
-    <div class="compass-control" id="compass-control">
-        <div class="compass-dial">
-            <div class="compass-n">N</div>
-            <div class="compass-needle" id="compass-needle"></div>
+        <div class="orientation-row">
+            <span class="orientation-state" id="orientation-state">Modo: Orientaci&oacute;n real</span>
+            <button id="orientation-mode-btn" class="real">Norte fijo</button>
         </div>
-        <div class="compass-readout" id="compass-readout">Rumbo: --</div>
     </div>
     <div id="map"></div>
 </div>
@@ -209,6 +199,8 @@ const AppState = {
     polygonOpacityFactor: 1,
     isTracking: false,
     headingDeg: null,
+    mapRotationDeg: 0,
+    orientationMode: "real",
     orientationListening: false,
     orientationHandler: null,
     marcadorUsuario: null,
@@ -808,23 +800,39 @@ function buildUserHeadingIcon(headingDeg) {
     });
 }
 
-function updateCompassUI() {
-    const readout = document.getElementById("compass-readout");
-    const needle = document.getElementById("compass-needle");
-    if (!Number.isFinite(AppState.headingDeg)) {
-        readout.textContent = "Rumbo: --";
-        needle.style.transform = "rotate(0deg)";
-        return;
+function applyMapRotation() {
+    const mapPane = map.getPane("mapPane");
+    if (!mapPane || !mapPane.style) return;
+    const base = (mapPane.style.transform || "").replace(/\s*rotate\([^)]*\)/g, "");
+    const rot = AppState.orientationMode === "real" && Number.isFinite(AppState.mapRotationDeg) ? AppState.mapRotationDeg : 0;
+    mapPane.style.transform = `${base} rotate(${rot}deg)`;
+}
+
+function updateOrientationModeUI() {
+    const state = document.getElementById("orientation-state");
+    const btn = document.getElementById("orientation-mode-btn");
+    if (AppState.orientationMode === "real") {
+        state.textContent = "Modo: Orientacion real";
+        btn.textContent = "Norte fijo";
+        btn.classList.add("real");
+    } else {
+        state.textContent = "Modo: Norte fijo";
+        btn.textContent = "Orientacion real";
+        btn.classList.remove("real");
     }
-    const heading = normalizeHeading(AppState.headingDeg);
-    readout.textContent = `Rumbo: ${heading.toFixed(0)}°`;
-    needle.style.transform = `rotate(${heading}deg)`;
+}
+
+function toggleOrientationMode() {
+    AppState.orientationMode = AppState.orientationMode === "real" ? "north" : "real";
+    updateOrientationModeUI();
+    applyMapRotation();
 }
 
 function setHeading(newHeading) {
     if (!Number.isFinite(newHeading)) return;
     AppState.headingDeg = normalizeHeading(newHeading);
-    updateCompassUI();
+    AppState.mapRotationDeg = -AppState.headingDeg;
+    applyMapRotation();
     if (AppState.marcadorUsuario) {
         AppState.marcadorUsuario.setIcon(buildUserHeadingIcon(AppState.headingDeg));
     }
@@ -835,6 +843,8 @@ function stopOrientationTracking() {
     window.removeEventListener("deviceorientationabsolute", AppState.orientationHandler);
     window.removeEventListener("deviceorientation", AppState.orientationHandler);
     AppState.orientationListening = false;
+    AppState.mapRotationDeg = 0;
+    applyMapRotation();
 }
 
 function startOrientationTracking() {
@@ -925,6 +935,7 @@ async function init() {
         cargarOffsetGuardado();
         actualizarOffsetUI();
         refreshOpacityControlLabel();
+        updateOrientationModeUI();
         UI.setLoaderText("Cargando estados desde hoja de calculo...");
         AppState.dbExcel = await DataService.cargarExcel(AppConfig.sheetURL);
 
@@ -934,6 +945,7 @@ async function init() {
         UI.setLoaderText("Cargando poligonos principales...");
         AppState.prediosDataOriginal = await DataService.fetchJson("PoligonosFER.json");
         reconstruirCapasConOffset();
+        applyMapRotation();
         UI.ocultarLoader();
     } catch (error) {
         console.error(error);
@@ -942,6 +954,7 @@ async function init() {
 }
 
 map.on("moveend zoomend", renderizarEtiquetasCUS);
+map.on("move zoom zoomanim viewreset resize", applyMapRotation);
 document.getElementById("searchInput").addEventListener("keypress", (e) => {
     if (e.key === "Enter") buscarUniversal();
 });
@@ -951,6 +964,7 @@ document.getElementById("offset-north").addEventListener("input", aplicarOffsetT
 document.getElementById("offset-apply").addEventListener("click", aplicarOffsetDesdeUI);
 document.getElementById("offset-reset").addEventListener("click", resetearOffset);
 document.getElementById("opacity-slider").addEventListener("input", onOpacitySliderInput);
+document.getElementById("orientation-mode-btn").addEventListener("click", toggleOrientationMode);
 
 window.cambiarEquipoActivo = cambiarEquipoActivo;
 window.filtrarMapa = filtrarMapa;
