@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Saneamiento Físico Legal - Moquegua</title>
+    <title>Saneamiento F&iacute;sico Legal - Moquegua</title>
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -16,7 +16,7 @@
             --pending: #ff5e57;
             --done: #05c46b; 
             --proceso: #ffdd59;     
-            /* Colores Inspección y Panel */
+            /* Colores Inspecci&oacute;n y Panel */
             --rd2025: #0984e3; --rd2026: #00b894; --rd25sin: #6c5ce7; 
             --rd26sin: #e84393; --sinabip: #e17055; --y2026: #00cec9;       
         }
@@ -47,34 +47,56 @@
 
         .etiqueta-observ { text-align: center; pointer-events: none; display: flex; justify-content: center; align-items: center; }
         .etiqueta-observ span { background: rgba(255, 255, 255, 0.85); border: 1px solid #95a5a6; color: #2c3e50; font-size: 8.5px; font-weight: bold; padding: 1px 4px; border-radius: 3px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90px; }
+        .etiqueta-cus { pointer-events: none; }
+        .etiqueta-cus span { background: rgba(20, 26, 33, 0.85); color: #ffffff; border: 1px solid rgba(255,255,255,0.35); border-radius: 4px; padding: 1px 5px; font-size: 10px; font-weight: 700; letter-spacing: 0.2px; white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,0.35); }
         
         .photo-btn { display: flex; align-items: center; justify-content: center; gap: 8px; background: #0984e3; color: white !important; text-decoration: none; padding: 8px; border-radius: 5px; font-size: 12px; font-weight: bold; transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
         .photo-btn:hover { background: #74b9ff; transform: translateY(-1px); }
 
+        .offset-box { background: rgba(255,255,255,0.08); padding: 10px; border-radius: 8px; border-left: 4px solid #1abc9c; }
+        .offset-toggle-btn { width: 100%; border: none; border-radius: 6px; padding: 8px; background: #16a085; color: white; font-weight: bold; cursor: pointer; font-size: 12px; }
+        .offset-panel { display: none; margin-top: 10px; }
+        .offset-box.open .offset-panel { display: block; }
+        .offset-title { font-size: 11px; font-weight: bold; color: #dcdde1; margin-bottom: 8px; text-transform: uppercase; }
+        .offset-slider-block { margin-bottom: 10px; }
+        .offset-slider-row { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #dcdde1; margin-bottom: 4px; }
+        .offset-slider { width: 100%; }
+        .offset-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px; }
+        .offset-btn { border: none; border-radius: 5px; padding: 8px; font-size: 11px; font-weight: bold; cursor: pointer; }
+        .offset-btn.apply { background: #1abc9c; color: #0b2d2d; }
+        .offset-btn.reset { background: #7f8c8d; color: white; }
+        .offset-status { margin-top: 6px; font-size: 10px; color: #a4b0be; text-align: center; }
+
         #batch-container { display: none; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; border-left: 4px solid #f1c40f; }
         #batch-input { width: 100%; height: 140px; border-radius: 5px; padding: 10px; box-sizing: border-box; border: none; font-family: monospace; font-size: 12px; resize: vertical; background: #34495e; color: white; }
+
+        .opacity-control { position: absolute; top: 14px; right: 225px; z-index: 1000; background: rgba(20,26,33,0.9); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 10px; min-width: 170px; box-shadow: 0 4px 12px rgba(0,0,0,0.35); }
+        .opacity-title { color: #dfe6e9; font-size: 11px; font-weight: 700; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.3px; }
+        .opacity-row { display: flex; align-items: center; gap: 8px; }
+        #opacity-slider { width: 100%; }
+        #opacity-value { color: #81ecec; font-size: 11px; font-weight: 700; min-width: 36px; text-align: right; }
     </style>
 </head>
 <body>
 
 <div id="loader" class="loading-screen">
     <h2 style="color: var(--accent)">COMPONENTE DE SANEAMIENTO</h2>
-    <p id="loader-text">Cargando topografía y datos catastrales...</p>
+    <p id="loader-text">Cargando topograf&iacute;a y datos catastrales...</p>
 </div>
 
 <div id="sidebar">
     <div style="text-align: center;">
         <h2 style="margin:0; font-size: 20px;">COMPONENTE SANEAMIENTO</h2>
-        <small style="color: var(--accent); letter-spacing: 1px;">CONTROL FÍSICO LEGAL</small>
+        <small style="color: var(--accent); letter-spacing: 1px;">CONTROL F&Iacute;SICO LEGAL</small>
     </div>
 
     <div class="team-selector">
         <select id="equipoSelect" onchange="cambiarEquipoActivo()">
-            <option value="ESTADO_SINABIP">📊 Equipo SINABIP</option>
-            <option value="ESTADO_RD">📊 Equipo RD</option>
-            <option value="ESTADO_ITJ">📊 Equipo ITJ</option>
-            <option value="ESTADO_INSP_PAN">📊 Inspección y Panel</option>
-            <option value="BUSCAR_CANTIDAD">📋 Búsqueda Masiva (Excel)</option>
+            <option value="ESTADO_SINABIP">Equipo SINABIP</option>
+            <option value="ESTADO_RD">Equipo RD</option>
+            <option value="ESTADO_ITJ">Equipo ITJ</option>
+            <option value="ESTADO_INSP_PAN">Inspecci&oacute;n y Panel</option>
+            <option value="BUSCAR_CANTIDAD">B&uacute;squeda Masiva (Excel)</option>
         </select>
     </div>
     
@@ -83,10 +105,36 @@
         <button onclick="buscarUniversal()" style="width:100%; margin-top:8px; padding:8px; background:var(--accent); border:none; color:white; border-radius:5px; cursor:pointer; font-weight:bold;">BUSCAR</button>
     </div>
 
+    <div class="offset-box" id="offset-box">
+        <button id="offset-toggle" class="offset-toggle-btn" title="Ajuste fino">&#9881; Ajuste fino</button>
+        <div id="offset-panel" class="offset-panel">
+            <div class="offset-title">Calibraci&oacute;n de Pol&iacute;gonos (m)</div>
+            <div class="offset-slider-block">
+                <div class="offset-slider-row">
+                    <span>Este (+E / -O)</span>
+                    <span id="offset-east-value">0.0 m</span>
+                </div>
+                <input id="offset-east" class="offset-slider" type="range" min="-30" max="30" step="0.1" value="0">
+            </div>
+            <div class="offset-slider-block">
+                <div class="offset-slider-row">
+                    <span>Norte (+N / -S)</span>
+                    <span id="offset-north-value">0.0 m</span>
+                </div>
+                <input id="offset-north" class="offset-slider" type="range" min="-30" max="30" step="0.1" value="0">
+            </div>
+            <div class="offset-actions">
+                <button id="offset-apply" class="offset-btn apply">Aplicar</button>
+                <button id="offset-reset" class="offset-btn reset">Reiniciar</button>
+            </div>
+            <div id="offset-status" class="offset-status">Offset actual: E 0.0 m | N 0.0 m</div>
+        </div>
+    </div>
+
     <div id="batch-container">
-        <div style="font-size: 11px; font-weight: bold; margin-bottom: 8px; color: #dcdde1;">PEGA LA LISTA DE CUS AQUÍ (Uno por línea):</div>
+        <div style="font-size: 11px; font-weight: bold; margin-bottom: 8px; color: #dcdde1;">PEGA LA LISTA DE CUS AQU&Iacute; (Uno por l&iacute;nea):</div>
         <textarea id="batch-input" placeholder="Ejemplo:&#10;161467&#10;161638&#10;53995"></textarea>
-        <button onclick="ejecutarBatch()" style="width: 100%; margin-top: 10px; padding: 10px; background: #f1c40f; border: none; color: #1e272e; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s;">🔍 PROYECTAR EN MAPA</button>
+        <button onclick="ejecutarBatch()" style="width: 100%; margin-top: 10px; padding: 10px; background: #f1c40f; border: none; color: #1e272e; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s;">PROYECTAR EN MAPA</button>
         <div id="batch-results" style="font-size: 12px; margin-top: 10px; color: #0fbcf9; text-align: center; font-weight: bold;"></div>
     </div>
 
@@ -101,325 +149,701 @@
 </div>
 
 <div id="map-container">
-    <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+    <button class="toggle-btn" onclick="toggleSidebar()">&#9776;</button>
+    <div class="opacity-control">
+        <div class="opacity-title">Transparencia Pol&iacute;gonos</div>
+        <div class="opacity-row">
+            <input id="opacity-slider" type="range" min="10" max="100" step="1" value="100">
+            <span id="opacity-value">100%</span>
+        </div>
+    </div>
     <div id="map"></div>
 </div>
 
 <script>
-    function mostrarError(mensajeError) {
-        const loader = document.getElementById('loader');
-        loader.innerHTML = `<h2 style="color: var(--pending)">⚠️ ERROR</h2><p>${mensajeError}</p><button onclick="location.reload()">Reintentar</button>`;
+const AppConfig = {
+    zoomTextos: 19,
+    zoomCusLabels: 17,
+    maxCusLabels: 450,
+    sheetURL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTPFK63kpF9SASdx-AXGUSA8UnSNxCpfcJbo6SFsF2s8jvvc3b_cbBEbNgyedsOYOtc1sS3cnI3GE75/pub?output=csv"
+};
+
+const AppState = {
+    geojsonLayer: null,
+    dbExcel: {},
+    equipoActivo: "ESTADO_SINABIP",
+    filtroActivo: "TODOS",
+    poligonosVisibles: [],
+    fondoDataOriginal: null,
+    prediosDataOriginal: null,
+    offsetEastMeters: 0,
+    offsetNorthMeters: 0,
+    offsetRebuildQueued: false,
+    polygonOpacityFactor: 1,
+    isTracking: false,
+    marcadorUsuario: null,
+    circuloPrecision: null
+};
+
+const Utils = {
+    escapeHtml(value) {
+        if (value === null || value === undefined) return "";
+        return String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+    },
+    normalizeText(value) {
+        return (value || "").toString().toUpperCase().trim();
+    },
+    keyCell(lat, lng) {
+        return `${Math.floor(lat * 1000)}|${Math.floor(lng * 1000)}`;
     }
+};
 
-    var googleSatelite = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', { maxZoom: 21, attribution: '© Google' });
-    var googleHibrido = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', { maxZoom: 21, attribution: '© Google' });
-    var oscuro = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 });
+const UI = {
+    setLoaderText(texto) {
+        const node = document.getElementById("loader-text");
+        if (node) node.textContent = texto;
+    },
+    ocultarLoader() {
+        document.getElementById("loader").style.display = "none";
+    },
+    mostrarError(mensajeError) {
+        const loader = document.getElementById("loader");
+        loader.innerHTML = `<h2 style="color: var(--pending)">ERROR</h2><p>${Utils.escapeHtml(mensajeError)}</p><button onclick="location.reload()">Reintentar</button>`;
+    }
+};
 
-    var map = L.map('map', { center: [-17.193, -70.933], zoom: 16, layers: [googleSatelite], zoomControl: false, preferCanvas: true });
-    L.control.zoom({ position: 'bottomright' }).addTo(map);
-    map.createPane('paneCapaFondo'); map.getPane('paneCapaFondo').style.zIndex = 390;
-
-    var baseMaps = { "🛰️ Google Satélite": googleSatelite, "🌍 Google Híbrido": googleHibrido, "🌙 Mapa Oscuro": oscuro };
-    var capaFondoGroup = L.layerGroup(); var etiquetasFondoLayer = L.layerGroup(); 
-    var overlayMaps = { "🗂️ Polígonos Catastrales": capaFondoGroup, "🔤 Textos Catastrales": etiquetasFondoLayer };
-    L.control.layers(baseMaps, overlayMaps, { collapsed: false }).addTo(map);
-
-    var datosEtiquetasFondo = []; var ZOOM_TEXTOS = 19; 
-    var poligonosVisibles = [];
-
-    function renderizarEtiquetasFondo() {
-        if (map.hasLayer(etiquetasFondoLayer)) {
-            if (map.getZoom() >= ZOOM_TEXTOS) {
-                let bounds = map.getBounds().pad(0.1); 
-                datosEtiquetasFondo.forEach(item => {
-                    if (!item.center) { if (item.layer.getBounds) item.center = item.layer.getBounds().getCenter(); else return; }
-                    
-                    if (bounds.contains(item.center)) {
-                        let esVisibleEnColor = false;
-                        if (poligonosVisibles.length > 0) {
-                            for (let i = 0; i < poligonosVisibles.length; i++) {
-                                if (poligonosVisibles[i].getBounds().contains(item.center)) {
-                                    esVisibleEnColor = true; break;
-                                }
-                            }
-                        }
-                        if (esVisibleEnColor) {
-                            if (!item.marker) item.marker = L.marker(item.center, { icon: L.divIcon({ className: 'etiqueta-observ', html: `<span>${item.text}</span>`, iconSize: [100, 20], iconAnchor: [50, 10] }), interactive: false });
-                            if (!etiquetasFondoLayer.hasLayer(item.marker)) etiquetasFondoLayer.addLayer(item.marker);
-                        } else {
-                            if (item.marker && etiquetasFondoLayer.hasLayer(item.marker)) etiquetasFondoLayer.removeLayer(item.marker);
-                        }
-                    } else if (item.marker && etiquetasFondoLayer.hasLayer(item.marker)) {
-                        etiquetasFondoLayer.removeLayer(item.marker);
+const DataService = {
+    fetchJson(url) {
+        return fetch(url).then((res) => {
+            if (!res.ok) throw new Error(`No se pudo cargar ${url} (HTTP ${res.status})`);
+            return res.json();
+        });
+    },
+    cargarExcel(url) {
+        return new Promise((resolve, reject) => {
+            Papa.parse(url, {
+                download: true,
+                header: true,
+                skipEmptyLines: true,
+                error: () => reject(new Error("No se pudo descargar la base CSV remota.")),
+                complete: (results) => {
+                    if (results.errors && results.errors.length > 0) {
+                        reject(new Error(`CSV con errores de parseo (${results.errors.length}).`));
+                        return;
                     }
-                });
-            } else { etiquetasFondoLayer.clearLayers(); }
-        }
+                    const db = {};
+                    results.data.forEach((row) => {
+                        if (row.NRO_CUS) db[row.NRO_CUS.trim()] = row;
+                    });
+                    resolve(db);
+                }
+            });
+        });
     }
-    map.on('moveend zoomend overlayadd overlayremove', renderizarEtiquetasFondo);
+};
 
-    var gpsControl = L.control({position: 'bottomleft'}); var isTracking = false; var marcadorUsuario = null; var circuloPrecision = null;
-    gpsControl.onAdd = function (map) {
-        var btn = L.DomUtil.create('button', 'leaflet-bar'); btn.id = 'btn-gps-field'; btn.innerHTML = '📍';
-        btn.style.cssText = 'background: white; border: 2px solid rgba(0,0,0,0.2); border-radius: 8px; width: 48px; height: 48px; cursor: pointer; font-size: 24px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; margin-left: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.3);';
-        btn.onclick = function() {
-            if (!isTracking) {
-                isTracking = true; btn.style.background = '#0fbcf9'; btn.style.color = 'white'; btn.innerHTML = '🛰️';
-                map.locate({ watch: true, enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 });
-            } else {
-                isTracking = false; btn.style.background = 'white'; btn.style.color = 'black'; btn.innerHTML = '📍';
-                map.stopLocate(); if (marcadorUsuario) { map.removeLayer(marcadorUsuario); map.removeLayer(circuloPrecision); marcadorUsuario = null; circuloPrecision = null; }
+const googleSatelite = L.tileLayer("https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", { maxZoom: 21, attribution: "&copy; Google" });
+const googleHibrido = L.tileLayer("https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}", { maxZoom: 21, attribution: "&copy; Google" });
+const oscuro = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", { maxZoom: 19 });
+
+const map = L.map("map", { center: [-17.193, -70.933], zoom: 16, layers: [googleSatelite], zoomControl: false, preferCanvas: true });
+L.control.zoom({ position: "bottomright" }).addTo(map);
+map.createPane("paneCapaFondo");
+map.getPane("paneCapaFondo").style.zIndex = 390;
+
+const capaFondoGroup = L.layerGroup();
+const cusLabelsLayer = L.layerGroup().addTo(map);
+const baseMaps = { "Google Satelite": googleSatelite, "Google Hibrido": googleHibrido, "Mapa Oscuro": oscuro };
+const overlayMaps = { "Poligonos Catastrales": capaFondoGroup };
+L.control.layers(baseMaps, overlayMaps, { collapsed: false }).addTo(map);
+
+function getColorText(e) {
+    if (!e) return "#d63031";
+    const estado = Utils.normalizeText(e);
+    if (estado === "TERMINADO" || estado === "RD2026") return "#00b894";
+    if (estado.includes("PROCESO") || estado === "RD2025") return "#0984e3";
+    return "#d63031";
+}
+
+function obtenerEstiloPorEquipo(cus) {
+    if (AppState.equipoActivo === "BUSCAR_CANTIDAD") {
+        return { fillColor: "#f1c40f", weight: 2, color: "#ffffff", fillOpacity: 0.4 };
+    }
+    const info = AppState.dbExcel[cus];
+    const estado = info && info[AppState.equipoActivo] ? Utils.normalizeText(info[AppState.equipoActivo]) : "PENDIENTE";
+    let color = "#ff5e57";
+    let opacidad = 0.75;
+
+    if (AppState.equipoActivo === "ESTADO_INSP_PAN") {
+        if (estado === "RD2025") color = "#0984e3";
+        else if (estado === "RD2026") color = "#00b894";
+        else if (estado === "RD2025-SINABIP") color = "#6c5ce7";
+        else if (estado === "RD2026-SINABIP") color = "#e84393";
+        else if (estado === "SINABIP") color = "#e17055";
+        else if (estado === "2026") color = "#00cec9";
+        else if (estado === "EN PROCESO") color = "#ffdd59";
+        else {
+            opacidad = 0.35;
+            color = "#ff5e57";
+        }
+    } else if (estado === "TERMINADO") {
+        color = "#05c46b";
+    } else if (estado.includes("PROCESO")) {
+        color = "#ffdd59";
+    } else {
+        opacidad = 0.35;
+        color = "#ff5e57";
+    }
+    const finalOpacity = Math.max(0.05, Math.min(1, opacidad * AppState.polygonOpacityFactor));
+    return { fillColor: color, weight: 1.2, color: "white", fillOpacity: finalOpacity };
+}
+
+function crearPopupSeguro(cus, info) {
+    const c = Utils.escapeHtml(cus || "S/N");
+    const pe = Utils.escapeHtml(info.PE || "S/N");
+    const sSinabip = Utils.escapeHtml(info.ESTADO_SINABIP || "P");
+    const sRd = Utils.escapeHtml(info.ESTADO_RD || "P");
+    const sInsp = Utils.escapeHtml(info.ESTADO_INSP_PAN || "P");
+    const cusUrl = encodeURIComponent((cus || "").toString());
+    const urlFoto = `https://storage.googleapis.com/catastro-moquegua.firebasestorage.app/Captura_${cusUrl}.webp`;
+
+    return `
+        <div class="popup-container">
+            <div class="popup-title">CUS: ${c}</div>
+            <div class="data-row"><span class="label">PE:</span><span>${pe}</span></div>
+            <div class="status-box">
+                <div class="status-item"><span>SINABIP:</span><span style="color:${getColorText(info.ESTADO_SINABIP)}">${sSinabip}</span></div>
+                <div class="status-item"><span>RD:</span><span style="color:${getColorText(info.ESTADO_RD)}">${sRd}</span></div>
+                <div class="status-item"><span>INSP:</span><span style="color:${getColorText(info.ESTADO_INSP_PAN)}">${sInsp}</span></div>
+            </div>
+            <a href="${urlFoto}" target="_blank" rel="noopener noreferrer" class="photo-btn">Ver Captura Sinabip</a>
+        </div>
+    `;
+}
+
+function getApproxArea(feature) {
+    if (!feature.geometry || !feature.geometry.coordinates) return 0;
+    const coords = feature.geometry.coordinates.flat(Infinity);
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    for (let i = 0; i < coords.length; i += 2) {
+        if (coords[i] < minX) minX = coords[i];
+        if (coords[i] > maxX) maxX = coords[i];
+        if (coords[i + 1] < minY) minY = coords[i + 1];
+        if (coords[i + 1] > maxY) maxY = coords[i + 1];
+    }
+    return (maxX - minX) * (maxY - minY);
+}
+
+function getOffsetStorageKey() {
+    return "visor_saneamiento_offset_m_v1";
+}
+
+function cargarOffsetGuardado() {
+    try {
+        const raw = localStorage.getItem(getOffsetStorageKey());
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        if (typeof parsed.east === "number") AppState.offsetEastMeters = parsed.east;
+        if (typeof parsed.north === "number") AppState.offsetNorthMeters = parsed.north;
+    } catch (err) {
+        console.warn("No se pudo leer offset guardado.", err);
+    }
+}
+
+function guardarOffset() {
+    try {
+        localStorage.setItem(getOffsetStorageKey(), JSON.stringify({
+            east: AppState.offsetEastMeters,
+            north: AppState.offsetNorthMeters
+        }));
+    } catch (err) {
+        console.warn("No se pudo guardar offset.", err);
+    }
+}
+
+function actualizarOffsetUI() {
+    const eastInput = document.getElementById("offset-east");
+    const northInput = document.getElementById("offset-north");
+    const eastValue = document.getElementById("offset-east-value");
+    const northValue = document.getElementById("offset-north-value");
+    const status = document.getElementById("offset-status");
+    eastInput.value = AppState.offsetEastMeters.toFixed(1);
+    northInput.value = AppState.offsetNorthMeters.toFixed(1);
+    eastValue.textContent = `${AppState.offsetEastMeters.toFixed(1)} m`;
+    northValue.textContent = `${AppState.offsetNorthMeters.toFixed(1)} m`;
+    status.textContent = `Offset actual: E ${AppState.offsetEastMeters.toFixed(1)} m | N ${AppState.offsetNorthMeters.toFixed(1)} m`;
+}
+
+function actualizarSoloEtiquetasSlider() {
+    const east = parseFloat(document.getElementById("offset-east").value);
+    const north = parseFloat(document.getElementById("offset-north").value);
+    document.getElementById("offset-east-value").textContent = `${(Number.isFinite(east) ? east : 0).toFixed(1)} m`;
+    document.getElementById("offset-north-value").textContent = `${(Number.isFinite(north) ? north : 0).toFixed(1)} m`;
+}
+
+function actualizarTextoEstadoOffset() {
+    document.getElementById("offset-status").textContent = `Offset actual: E ${AppState.offsetEastMeters.toFixed(1)} m | N ${AppState.offsetNorthMeters.toFixed(1)} m`;
+}
+
+function toggleOffsetPanel() {
+    document.getElementById("offset-box").classList.toggle("open");
+}
+
+function calcularOffsetEnGrados() {
+    const latRef = map.getCenter().lat;
+    const dLat = AppState.offsetNorthMeters / 111320;
+    const cosLat = Math.cos((latRef * Math.PI) / 180);
+    const denomLng = 111320 * (Math.abs(cosLat) < 0.000001 ? 0.000001 : cosLat);
+    const dLng = AppState.offsetEastMeters / denomLng;
+    return { dLat, dLng };
+}
+
+function clonarGeoJson(data) {
+    return JSON.parse(JSON.stringify(data));
+}
+
+function desplazarCoordenadas(coords, dLng, dLat) {
+    if (!Array.isArray(coords) || coords.length === 0) return;
+    if (typeof coords[0] === "number") {
+        if (coords.length >= 2) {
+            coords[0] += dLng;
+            coords[1] += dLat;
+        }
+        return;
+    }
+    for (let i = 0; i < coords.length; i++) {
+        desplazarCoordenadas(coords[i], dLng, dLat);
+    }
+}
+
+function geoJsonDesplazado(dataOriginal, dLat, dLng) {
+    const copy = clonarGeoJson(dataOriginal);
+    if (!copy.features || (dLat === 0 && dLng === 0)) return copy;
+    for (let i = 0; i < copy.features.length; i++) {
+        const feature = copy.features[i];
+        if (!feature.geometry || !feature.geometry.coordinates) continue;
+        desplazarCoordenadas(feature.geometry.coordinates, dLng, dLat);
+    }
+    return copy;
+}
+
+function reconstruirCapasConOffset() {
+    if (!AppState.fondoDataOriginal || !AppState.prediosDataOriginal) return;
+
+    const { dLat, dLng } = calcularOffsetEnGrados();
+    const fondoData = geoJsonDesplazado(AppState.fondoDataOriginal, dLat, dLng);
+    const prediosData = geoJsonDesplazado(AppState.prediosDataOriginal, dLat, dLng);
+
+    capaFondoGroup.clearLayers();
+    cusLabelsLayer.clearLayers();
+    AppState.poligonosVisibles = [];
+
+    if (AppState.geojsonLayer && map.hasLayer(AppState.geojsonLayer)) {
+        map.removeLayer(AppState.geojsonLayer);
+    }
+
+    L.geoJSON(fondoData, {
+        pane: "paneCapaFondo",
+        style: { color: "#00e5ff", weight: 1.5, opacity: 0.9, fillOpacity: 0.0, interactive: false }
+    }).addTo(capaFondoGroup);
+
+    prediosData.features.sort((a, b) => getApproxArea(b) - getApproxArea(a));
+    AppState.geojsonLayer = L.geoJSON(prediosData, {
+        style: (f) => obtenerEstiloPorEquipo(f.properties.NRO_CUS),
+        onEachFeature: (f, layer) => {
+            const cus = f.properties.NRO_CUS;
+            const info = AppState.dbExcel[cus] || {};
+            layer.bindPopup(crearPopupSeguro(cus, info));
+        }
+    }).addTo(map);
+
+    if (AppState.equipoActivo === "BUSCAR_CANTIDAD") {
+        AppState.geojsonLayer.eachLayer((l) => map.removeLayer(l));
+        document.getElementById("count-all").innerText = "0";
+        document.getElementById("batch-results").textContent = "";
+        cusLabelsLayer.clearLayers();
+        return;
+    }
+
+    filtrarMapa(AppState.filtroActivo || "TODOS");
+    actualizarStats();
+}
+
+function aplicarOffsetDesdeUI() {
+    const eastVal = parseFloat(document.getElementById("offset-east").value);
+    const northVal = parseFloat(document.getElementById("offset-north").value);
+    AppState.offsetEastMeters = Number.isFinite(eastVal) ? eastVal : 0;
+    AppState.offsetNorthMeters = Number.isFinite(northVal) ? northVal : 0;
+    guardarOffset();
+    actualizarTextoEstadoOffset();
+    reconstruirCapasConOffset();
+}
+
+function aplicarOffsetTiempoReal() {
+    const eastVal = parseFloat(document.getElementById("offset-east").value);
+    const northVal = parseFloat(document.getElementById("offset-north").value);
+    AppState.offsetEastMeters = Number.isFinite(eastVal) ? eastVal : 0;
+    AppState.offsetNorthMeters = Number.isFinite(northVal) ? northVal : 0;
+    actualizarSoloEtiquetasSlider();
+    actualizarTextoEstadoOffset();
+    guardarOffset();
+
+    if (AppState.offsetRebuildQueued) return;
+    AppState.offsetRebuildQueued = true;
+    requestAnimationFrame(() => {
+        AppState.offsetRebuildQueued = false;
+        reconstruirCapasConOffset();
+    });
+}
+
+function resetearOffset() {
+    AppState.offsetEastMeters = 0;
+    AppState.offsetNorthMeters = 0;
+    guardarOffset();
+    actualizarOffsetUI();
+    reconstruirCapasConOffset();
+}
+
+function refreshOpacityControlLabel() {
+    const percent = Math.round(AppState.polygonOpacityFactor * 100);
+    document.getElementById("opacity-slider").value = percent.toString();
+    document.getElementById("opacity-value").textContent = `${percent}%`;
+}
+
+function aplicarTransparenciaEnMapa() {
+    if (!AppState.geojsonLayer) return;
+    AppState.geojsonLayer.eachLayer((l) => {
+        if (!l.feature || !l.feature.properties) return;
+        const cus = l.feature.properties.NRO_CUS;
+        l.setStyle(obtenerEstiloPorEquipo(cus));
+    });
+}
+
+function onOpacitySliderInput() {
+    const raw = parseInt(document.getElementById("opacity-slider").value, 10);
+    const safe = Number.isFinite(raw) ? raw : 100;
+    AppState.polygonOpacityFactor = Math.max(0.1, Math.min(1, safe / 100));
+    refreshOpacityControlLabel();
+    aplicarTransparenciaEnMapa();
+}
+
+function renderizarEtiquetasCUS() {
+    cusLabelsLayer.clearLayers();
+    const zoom = map.getZoom();
+    if (zoom < AppConfig.zoomCusLabels) return;
+    if (AppState.poligonosVisibles.length === 0) return;
+
+    const bounds = map.getBounds().pad(0.08);
+    const usedCells = new Set();
+    let labelsAdded = 0;
+    for (let i = 0; i < AppState.poligonosVisibles.length; i++) {
+        if (labelsAdded >= AppConfig.maxCusLabels) break;
+        const layer = AppState.poligonosVisibles[i];
+        if (!layer.getBounds || !layer.feature || !layer.feature.properties) continue;
+        const minZoom = getCusMinZoomByArea(layer.feature);
+        if (zoom < minZoom) continue;
+        const center = layer.getBounds().getCenter();
+        if (!bounds.contains(center)) continue;
+        const p = map.latLngToContainerPoint(center);
+        const cellKey = `${Math.floor(p.x / 72)}|${Math.floor(p.y / 22)}`;
+        if (usedCells.has(cellKey)) continue;
+        const cus = layer.feature.properties.NRO_CUS;
+        if (!cus) continue;
+        usedCells.add(cellKey);
+        const marker = L.marker(center, {
+            icon: L.divIcon({
+                className: "etiqueta-cus",
+                html: `<span>${Utils.escapeHtml(cus)}</span>`,
+                iconSize: [70, 18],
+                iconAnchor: [35, 9]
+            }),
+            interactive: false
+        });
+        cusLabelsLayer.addLayer(marker);
+        labelsAdded += 1;
+    }
+}
+
+function getCusMinZoomByArea(feature) {
+    const p = feature && feature.properties ? feature.properties : {};
+    let area = Number(p.Shape_Area);
+    if (!Number.isFinite(area) || area <= 0) {
+        area = estimateAreaFromBounds(feature);
+    }
+
+    if (area >= 15000) return 15;
+    if (area >= 5000) return 16;
+    if (area >= 1500) return 17;
+    if (area >= 500) return 18;
+    return 19;
+}
+
+function estimateAreaFromBounds(feature) {
+    if (!feature || !feature.geometry || !feature.geometry.coordinates) return 0;
+    const coords = feature.geometry.coordinates.flat(Infinity);
+    let minLng = Infinity;
+    let minLat = Infinity;
+    let maxLng = -Infinity;
+    let maxLat = -Infinity;
+    for (let i = 0; i < coords.length; i += 2) {
+        const lng = coords[i];
+        const lat = coords[i + 1];
+        if (!Number.isFinite(lng) || !Number.isFinite(lat)) continue;
+        if (lng < minLng) minLng = lng;
+        if (lng > maxLng) maxLng = lng;
+        if (lat < minLat) minLat = lat;
+        if (lat > maxLat) maxLat = lat;
+    }
+    if (!Number.isFinite(minLng) || !Number.isFinite(minLat) || !Number.isFinite(maxLng) || !Number.isFinite(maxLat)) return 0;
+    const latMid = (minLat + maxLat) / 2;
+    const metersPerDegLat = 111320;
+    const metersPerDegLng = 111320 * Math.cos((latMid * Math.PI) / 180);
+    const width = Math.abs(maxLng - minLng) * metersPerDegLng;
+    const height = Math.abs(maxLat - minLat) * metersPerDegLat;
+    return width * height;
+}
+
+function filtrarMapa(filtro) {
+    AppState.filtroActivo = filtro;
+    AppState.poligonosVisibles = [];
+    AppState.geojsonLayer.eachLayer((layer) => {
+        const info = AppState.dbExcel[layer.feature.properties.NRO_CUS];
+        const estado = info && info[AppState.equipoActivo] ? Utils.normalizeText(info[AppState.equipoActivo]) : "PENDIENTE";
+        let mostrar = false;
+
+        if (filtro === "TODOS") {
+            mostrar = true;
+        } else if (AppState.equipoActivo === "ESTADO_INSP_PAN") {
+            const esTerminado = ["RD2025", "RD2026", "RD2025-SINABIP", "RD2026-SINABIP", "SINABIP", "2026"].includes(estado);
+            if (filtro === "TERMINADO" && esTerminado) mostrar = true;
+            else if (filtro === "PROCESO" && estado === "EN PROCESO") mostrar = true;
+            else if (filtro === "PENDIENTE" && !esTerminado && estado !== "EN PROCESO") mostrar = true;
+        } else {
+            if (filtro === "TERMINADO" && estado === "TERMINADO") mostrar = true;
+            else if (filtro === "PROCESO" && estado.includes("PROCESO")) mostrar = true;
+            else if (filtro === "PENDIENTE" && estado !== "TERMINADO" && !estado.includes("PROCESO")) mostrar = true;
+        }
+
+        if (mostrar) {
+            map.addLayer(layer);
+            AppState.poligonosVisibles.push(layer);
+        } else {
+            map.removeLayer(layer);
+        }
+    });
+
+    renderizarEtiquetasCUS();
+}
+
+function actualizarStats() {
+    const s = { T: 0, D: 0, P: 0, PE: 0 };
+    AppState.geojsonLayer.eachLayer((layer) => {
+        const info = AppState.dbExcel[layer.feature.properties.NRO_CUS];
+        const estado = info && info[AppState.equipoActivo] ? Utils.normalizeText(info[AppState.equipoActivo]) : "PENDIENTE";
+        s.T += 1;
+        if (AppState.equipoActivo === "ESTADO_INSP_PAN") {
+            if (["RD2025", "RD2026", "RD2025-SINABIP", "RD2026-SINABIP", "SINABIP", "2026"].includes(estado)) s.D += 1;
+            else if (estado === "EN PROCESO") s.P += 1;
+            else s.PE += 1;
+        } else if (estado === "TERMINADO") {
+            s.D += 1;
+        } else if (estado.includes("PROCESO")) {
+            s.P += 1;
+        } else {
+            s.PE += 1;
+        }
+    });
+
+    document.getElementById("count-all").innerText = s.T;
+    document.getElementById("count-done").innerText = s.D;
+    document.getElementById("count-process").innerText = s.P;
+    document.getElementById("count-pending").innerText = s.PE;
+}
+
+function cambiarEquipoActivo() {
+    AppState.equipoActivo = document.getElementById("equipoSelect").value;
+    const batchCont = document.getElementById("batch-container");
+    const filterGrid = document.querySelector(".filter-grid");
+    const searchBox = document.querySelector(".search-box");
+
+    if (AppState.equipoActivo === "BUSCAR_CANTIDAD") {
+        batchCont.style.display = "block";
+        filterGrid.style.display = "none";
+        searchBox.style.display = "none";
+        AppState.geojsonLayer.eachLayer((l) => map.removeLayer(l));
+        document.getElementById("count-all").innerText = "0";
+        document.getElementById("batch-results").textContent = "";
+        AppState.poligonosVisibles = [];
+        cusLabelsLayer.clearLayers();
+        return;
+    }
+
+    batchCont.style.display = "none";
+    filterGrid.style.display = "grid";
+    searchBox.style.display = "block";
+    AppState.geojsonLayer.eachLayer((l) => l.setStyle(obtenerEstiloPorEquipo(l.feature.properties.NRO_CUS)));
+    filtrarMapa("TODOS");
+    actualizarStats();
+}
+
+function buscarUniversal() {
+    const valor = document.getElementById("searchInput").value.toLowerCase().trim();
+    let found = false;
+    AppState.geojsonLayer.eachLayer((layer) => {
+        const cus = layer.feature.properties.NRO_CUS;
+        const info = AppState.dbExcel[cus] || {};
+        const bString = `${cus} ${info.PROPIETARI || ""} ${info.PE || ""}`.toLowerCase();
+        if (bString.includes(valor)) {
+            if (!found) {
+                map.flyTo(layer.getBounds().getCenter(), 19);
+                layer.openPopup();
             }
-        }; return btn;
+            found = true;
+        }
+    });
+    if (!found) alert("No se encontro el predio o partida.");
+}
+
+function ejecutarBatch() {
+    const text = document.getElementById("batch-input").value;
+    const batchCusList = text.split(/[\n,\t ]+/).map((s) => s.trim()).filter((s) => s !== "");
+    if (batchCusList.length === 0) {
+        alert("Por favor pega al menos un CUS en el cuadro.");
+        return;
+    }
+
+    const batchSet = new Set(batchCusList);
+    let encontrados = 0;
+    const bounds = L.latLngBounds();
+    AppState.poligonosVisibles = [];
+
+    AppState.geojsonLayer.eachLayer((layer) => {
+        const cus = layer.feature.properties.NRO_CUS;
+        if (cus && batchSet.has(cus.toString())) {
+            map.addLayer(layer);
+            layer.setStyle({ fillColor: "#f1c40f", weight: 2, color: "#ffffff", fillOpacity: Math.max(0.05, 0.4 * AppState.polygonOpacityFactor) });
+            encontrados += 1;
+            bounds.extend(layer.getBounds());
+            AppState.poligonosVisibles.push(layer);
+        } else {
+            map.removeLayer(layer);
+        }
+    });
+
+    document.getElementById("batch-results").innerHTML = `Mostrando en mapa: <b>${encontrados}</b> de <b>${batchCusList.length}</b> ingresados.`;
+    document.getElementById("count-all").innerText = encontrados;
+    renderizarEtiquetasCUS();
+
+    if (encontrados > 0) map.fitBounds(bounds, { padding: [30, 30] });
+    else alert("Ninguno de los CUS ingresados existe en la base de datos GIS.");
+}
+
+function toggleSidebar() {
+    document.getElementById("sidebar").classList.toggle("oculto");
+    setTimeout(() => map.invalidateSize(), 300);
+}
+
+function inicializarGPSControl() {
+    const gpsControl = L.control({ position: "bottomleft" });
+    gpsControl.onAdd = function onAdd(mapa) {
+        const btn = L.DomUtil.create("button", "leaflet-bar");
+        btn.id = "btn-gps-field";
+        btn.textContent = "GPS";
+        btn.style.cssText = "background: white; border: 2px solid rgba(0,0,0,0.2); border-radius: 8px; width: 52px; height: 48px; cursor: pointer; font-size: 14px; font-weight: bold; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; margin-left: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.3);";
+        btn.onclick = function onClick() {
+            if (!AppState.isTracking) {
+                AppState.isTracking = true;
+                btn.style.background = "#0fbcf9";
+                btn.style.color = "white";
+                btn.textContent = "ON";
+                mapa.locate({ watch: true, enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 });
+            } else {
+                AppState.isTracking = false;
+                btn.style.background = "white";
+                btn.style.color = "black";
+                btn.textContent = "GPS";
+                mapa.stopLocate();
+                if (AppState.marcadorUsuario) {
+                    mapa.removeLayer(AppState.marcadorUsuario);
+                    mapa.removeLayer(AppState.circuloPrecision);
+                    AppState.marcadorUsuario = null;
+                    AppState.circuloPrecision = null;
+                }
+            }
+        };
+        return btn;
     };
     gpsControl.addTo(map);
-    map.on('locationfound', function(e) {
-        var radio = e.accuracy / 2;
-        if (!marcadorUsuario) {
-            circuloPrecision = L.circle(e.latlng, { radius: radio, color: "#0fbcf9", weight: 1, opacity: 0.5, fillOpacity: 0.15 }).addTo(map);
-            marcadorUsuario = L.circleMarker(e.latlng, { radius: 8, fillColor: "#0fbcf9", color: "#fff", weight: 3, opacity: 1, fillOpacity: 1 }).addTo(map);
+
+    map.on("locationfound", (e) => {
+        const radio = e.accuracy / 2;
+        if (!AppState.marcadorUsuario) {
+            AppState.circuloPrecision = L.circle(e.latlng, { radius: radio, color: "#0fbcf9", weight: 1, opacity: 0.5, fillOpacity: 0.15 }).addTo(map);
+            AppState.marcadorUsuario = L.circleMarker(e.latlng, { radius: 8, fillColor: "#0fbcf9", color: "#fff", weight: 3, opacity: 1, fillOpacity: 1 }).addTo(map);
             map.flyTo(e.latlng, 19);
-        } else { marcadorUsuario.setLatLng(e.latlng); circuloPrecision.setLatLng(e.latlng); circuloPrecision.setRadius(radio); }
-    });
-
-    var geojsonLayer; var dbExcel = {}; var equipoActivo = "ESTADO_SINABIP";
-    const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTPFK63kpF9SASdx-AXGUSA8UnSNxCpfcJbo6SFsF2s8jvvc3b_cbBEbNgyedsOYOtc1sS3cnI3GE75/pub?output=csv";
-
-    function obtenerEstiloPorEquipo(cus) {
-        if (equipoActivo === 'BUSCAR_CANTIDAD') {
-            // AJUSTE: Opacidad bajada a 0.4 para dar transparencia
-            return { fillColor: '#f1c40f', weight: 2, color: '#ffffff', fillOpacity: 0.4 };
-        }
-
-        let info = dbExcel[cus]; let estado = "PENDIENTE";
-        if(info && info[equipoActivo]) estado = info[equipoActivo].toUpperCase().trim();
-        let color = "#ff5e57"; let opacidad = 0.75;    
-        
-        if (equipoActivo === 'ESTADO_INSP_PAN') {
-            if (estado === "RD2025") color = "#0984e3"; else if (estado === "RD2026") color = "#00b894"; 
-            else if (estado === "RD2025-SINABIP") color = "#6c5ce7"; else if (estado === "RD2026-SINABIP") color = "#e84393"; 
-            else if (estado === "SINABIP") color = "#e17055"; else if (estado === "2026") color = "#00cec9"; 
-            else if (estado === "EN PROCESO") color = "#ffdd59"; else { opacidad = 0.35; color = "#ff5e57"; } 
         } else {
-            if (estado === "TERMINADO") color = "#05c46b"; else if (estado.includes("PROCESO")) color = "#ffdd59"; 
-            else { opacidad = 0.35; color = "#ff5e57"; } 
-        }
-        return { fillColor: color, weight: 1.2, color: 'white', fillOpacity: opacidad };
-    }
-
-    Papa.parse(sheetURL, {
-        download: true, header: true,
-        complete: function(results) {
-            results.data.forEach(row => { if(row.NRO_CUS) dbExcel[row.NRO_CUS.trim()] = row; });
-            
-            fetch('Fondo.json').then(res => res.json()).then(data => {
-                L.geoJSON(data, {
-                    pane: 'paneCapaFondo',
-                    style: { color: '#00e5ff', weight: 1.5, opacity: 0.9, fillOpacity: 0.0, interactive: false },
-                    onEachFeature: function(feature, layer) {
-                        if (feature.properties && feature.properties.OBSERV) {
-                            let obs = feature.properties.OBSERV.trim();
-                            if (obs !== "" && obs.toLowerCase() !== "null") datosEtiquetasFondo.push({ layer: layer, text: obs, marker: null, center: null });
-                        }
-                    }
-                }).addTo(capaFondoGroup);
-            });
-
-            fetch('PoligonosFER.json').then(res => res.json()).then(data => {
-                
-                function getApproxArea(feature) {
-                    if (!feature.geometry || !feature.geometry.coordinates) return 0;
-                    let coords = feature.geometry.coordinates.flat(Infinity);
-                    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-                    for(let i=0; i<coords.length; i+=2) {
-                        if(coords[i] < minX) minX = coords[i];
-                        if(coords[i] > maxX) maxX = coords[i];
-                        if(coords[i+1] < minY) minY = coords[i+1];
-                        if(coords[i+1] > maxY) maxY = coords[i+1];
-                    }
-                    return (maxX - minX) * (maxY - minY);
-                }
-                data.features.sort((a, b) => getApproxArea(b) - getApproxArea(a));
-
-                geojsonLayer = L.geoJSON(data, {
-                    style: function(f) { return obtenerEstiloPorEquipo(f.properties.NRO_CUS); },
-                    onEachFeature: function(f, l) {
-                        let c = f.properties.NRO_CUS; let i = dbExcel[c] || {};
-                        let urlFoto = `https://storage.googleapis.com/catastro-moquegua.firebasestorage.app/Captura_${c}.webp`;
-                        
-                        l.bindPopup(`
-                            <div class="popup-container">
-                                <div class="popup-title">CUS: ${c}</div>
-                                <div class="data-row"><span class="label">PE:</span><span>${i.PE || 'S/N'}</span></div>
-                                
-                                <div class="status-box">
-                                    <div class="status-item"><span>SINABIP:</span><span style="color:${getColorText(i.ESTADO_SINABIP)}">${i.ESTADO_SINABIP || 'P'}</span></div>
-                                    <div class="status-item"><span>RD:</span><span style="color:${getColorText(i.ESTADO_RD)}">${i.ESTADO_RD || 'P'}</span></div>
-                                    <div class="status-item"><span>INSP:</span><span style="color:${getColorText(i.ESTADO_INSP_PAN)}">${i.ESTADO_INSP_PAN || 'P'}</span></div>
-                                </div>
-                                
-                                <a href="${urlFoto}" target="_blank" class="photo-btn">
-                                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                                        <path d="M10.5 8.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/>
-                                        <path d="M2 4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-1.172a2 2 0 0 1-1.414-.586l-.828-.828A2 2 0 0 0 9.172 2H6.828a2 2 0 0 0-1.414.586l-.828.828A2 2 0 0 1 3.172 4H2zm.5 2a.5.5 0 1 1 0-1 .5.5 0 0 1 0 1zm9 2.5a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0z"/>
-                                    </svg>
-                                    Ver Captura Sinabip
-                                </a>
-                            </div>
-                        `);
-                    }
-                }).addTo(map);
-                filtrarMapa('TODOS'); actualizarStats(); document.getElementById('loader').style.display = 'none'; 
-            });
+            AppState.marcadorUsuario.setLatLng(e.latlng);
+            AppState.circuloPrecision.setLatLng(e.latlng);
+            AppState.circuloPrecision.setRadius(radio);
         }
     });
 
-    function getColorText(e) { if(!e) return "#d63031"; e = e.toUpperCase(); if(e === "TERMINADO" || e === "RD2026") return "#00b894"; if(e.includes("PROCESO") || e === "RD2025") return "#0984e3"; return "#d63031"; }
-    
-    function cambiarEquipoActivo() { 
-        equipoActivo = document.getElementById('equipoSelect').value; 
-        
-        let batchCont = document.getElementById('batch-container');
-        let filterGrid = document.querySelector('.filter-grid');
-        let searchBox = document.querySelector('.search-box');
+    map.on("locationerror", () => {
+        alert("No se pudo obtener la ubicacion GPS. Verifica permisos y senal.");
+    });
+}
 
-        if (equipoActivo === 'BUSCAR_CANTIDAD') {
-            batchCont.style.display = 'block';
-            filterGrid.style.display = 'none';
-            searchBox.style.display = 'none';
-            
-            geojsonLayer.eachLayer(l => map.removeLayer(l));
-            document.getElementById('count-all').innerText = "0";
-            document.getElementById('batch-results').innerHTML = "";
-            poligonosVisibles = [];
-            renderizarEtiquetasFondo();
-        } else {
-            batchCont.style.display = 'none';
-            filterGrid.style.display = 'grid';
-            searchBox.style.display = 'block';
+async function init() {
+    try {
+        inicializarGPSControl();
+        cargarOffsetGuardado();
+        actualizarOffsetUI();
+        refreshOpacityControlLabel();
+        UI.setLoaderText("Cargando estados desde hoja de calculo...");
+        AppState.dbExcel = await DataService.cargarExcel(AppConfig.sheetURL);
 
-            geojsonLayer.eachLayer(l => l.setStyle(obtenerEstiloPorEquipo(l.feature.properties.NRO_CUS))); 
-            filtrarMapa('TODOS'); 
-            actualizarStats(); 
-        }
+        UI.setLoaderText("Cargando capa de fondo...");
+        AppState.fondoDataOriginal = await DataService.fetchJson("Fondo.json");
+
+        UI.setLoaderText("Cargando poligonos principales...");
+        AppState.prediosDataOriginal = await DataService.fetchJson("PoligonosFER.json");
+        reconstruirCapasConOffset();
+        UI.ocultarLoader();
+    } catch (error) {
+        console.error(error);
+        UI.mostrarError(error && error.message ? error.message : "Error inesperado al cargar el visor.");
     }
+}
 
-    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('oculto'); setTimeout(() => map.invalidateSize(), 300); }
+map.on("moveend zoomend", renderizarEtiquetasCUS);
+document.getElementById("searchInput").addEventListener("keypress", (e) => {
+    if (e.key === "Enter") buscarUniversal();
+});
+document.getElementById("offset-toggle").addEventListener("click", toggleOffsetPanel);
+document.getElementById("offset-east").addEventListener("input", aplicarOffsetTiempoReal);
+document.getElementById("offset-north").addEventListener("input", aplicarOffsetTiempoReal);
+document.getElementById("offset-apply").addEventListener("click", aplicarOffsetDesdeUI);
+document.getElementById("offset-reset").addEventListener("click", resetearOffset);
+document.getElementById("opacity-slider").addEventListener("input", onOpacitySliderInput);
 
-    function filtrarMapa(f) {
-        poligonosVisibles = [];
-        geojsonLayer.eachLayer(l => {
-            let info = dbExcel[l.feature.properties.NRO_CUS]; 
-            let est_raw = "PENDIENTE";
-            if(info && info[equipoActivo]) est_raw = info[equipoActivo].toUpperCase().trim();
-            
-            let mostrar = false;
-            
-            if (f === 'TODOS') {
-                mostrar = true;
-            } else if (equipoActivo === 'ESTADO_INSP_PAN') {
-                let esGrupoTerminado = ["RD2025", "RD2026", "RD2025-SINABIP", "RD2026-SINABIP", "SINABIP", "2026"].includes(est_raw);
-                if (f === 'TERMINADO' && esGrupoTerminado) mostrar = true;
-                else if (f === 'PROCESO' && est_raw === "EN PROCESO") mostrar = true;
-                else if (f === 'PENDIENTE' && !esGrupoTerminado && est_raw !== "EN PROCESO") mostrar = true;
-            } else {
-                if (f === 'TERMINADO' && est_raw === "TERMINADO") mostrar = true;
-                else if (f === 'PROCESO' && est_raw.includes("PROCESO")) mostrar = true;
-                else if (f === 'PENDIENTE' && est_raw !== "TERMINADO" && !est_raw.includes("PROCESO")) mostrar = true;
-            }
+window.cambiarEquipoActivo = cambiarEquipoActivo;
+window.filtrarMapa = filtrarMapa;
+window.buscarUniversal = buscarUniversal;
+window.ejecutarBatch = ejecutarBatch;
+window.toggleSidebar = toggleSidebar;
 
-            if (mostrar) { 
-                map.addLayer(l); 
-                poligonosVisibles.push(l); 
-            } else { 
-                map.removeLayer(l); 
-            }
-        });
-        renderizarEtiquetasFondo();
-    }
+init();
 
-    function actualizarStats() {
-        let s = { T:0, D:0, P:0, PE:0 }; 
-        geojsonLayer.eachLayer(l => {
-            let info = dbExcel[l.feature.properties.NRO_CUS]; let e = "PENDIENTE";
-            if(info && info[equipoActivo]) e = info[equipoActivo].toUpperCase().trim();
-            s.T++;
-            
-            if (equipoActivo === 'ESTADO_INSP_PAN') {
-                if (["RD2025", "RD2026", "RD2025-SINABIP", "RD2026-SINABIP", "SINABIP", "2026"].includes(e)) {
-                    s.D++; 
-                } else if (e === "EN PROCESO") {
-                    s.P++;
-                } else {
-                    s.PE++; 
-                }
-            } else {
-                if (e === "TERMINADO") s.D++; else if (e.includes("PROCESO")) s.P++; else s.PE++;
-            }
-        });
-
-        document.getElementById('count-all').innerText = s.T; 
-        document.getElementById('count-done').innerText = s.D;
-        document.getElementById('count-process').innerText = s.P;
-        document.getElementById('count-pending').innerText = s.PE;
-
-        let btnPendiente = document.getElementById('btn-pendiente');
-        if (equipoActivo === 'ESTADO_INSP_PAN') {
-            btnPendiente.style.gridColumn = 'span 2'; 
-        } else {
-            btnPendiente.style.gridColumn = 'span 2'; 
-        }
-    }
-
-    function buscarUniversal() {
-        let v = document.getElementById('searchInput').value.toLowerCase().trim(); let found = false;
-        geojsonLayer.eachLayer(l => {
-            let cus = l.feature.properties.NRO_CUS; let info = dbExcel[cus] || {};
-            let bString = `${cus} ${info.PROPIETARI} ${info.PE}`.toLowerCase();
-            if(bString.includes(v)) { if(!found) { map.flyTo(l.getBounds().getCenter(), 19); l.openPopup(); } found = true; }
-        });
-        if(!found) alert("No se encontró el predio o partida.");
-    }
-    document.getElementById('searchInput').addEventListener('keypress', e => { if(e.key === 'Enter') buscarUniversal(); });
-
-    function ejecutarBatch() {
-        let text = document.getElementById('batch-input').value;
-        let batchCusList = text.split(/[\n,\t ]+/).map(s => s.trim()).filter(s => s !== "");
-        
-        if(batchCusList.length === 0) {
-            alert("Por favor pega al menos un CUS en el cuadro.");
-            return;
-        }
-
-        let encontrados = 0;
-        let bounds = L.latLngBounds();
-        poligonosVisibles = [];
-
-        geojsonLayer.eachLayer(l => {
-            let cus = l.feature.properties.NRO_CUS;
-            if (cus && batchCusList.includes(cus.toString())) {
-                map.addLayer(l);
-                // AJUSTE: Opacidad bajada a 0.4 aquí también al ejecutar
-                l.setStyle({ fillColor: '#f1c40f', weight: 2, color: '#ffffff', fillOpacity: 0.4 });
-                encontrados++;
-                bounds.extend(l.getBounds());
-                poligonosVisibles.push(l);
-            } else {
-                map.removeLayer(l);
-            }
-        });
-
-        document.getElementById('batch-results').innerHTML = `Mostrando en mapa: <b>${encontrados}</b> de <b>${batchCusList.length}</b> ingresados.`;
-        document.getElementById('count-all').innerText = encontrados;
-        
-        renderizarEtiquetasFondo();
-
-        if (encontrados > 0) {
-            map.fitBounds(bounds, { padding: [30, 30] });
-        } else {
-            alert("Ninguno de los CUS ingresados existe en la base de datos GIS.");
-        }
-    }
 </script>
 </body>
 </html>
+
+
