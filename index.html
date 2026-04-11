@@ -75,6 +75,26 @@
         .opacity-row { display: flex; align-items: center; gap: 8px; }
         #opacity-slider { width: 100%; }
         #opacity-value { color: #81ecec; font-size: 11px; font-weight: 700; min-width: 36px; text-align: right; }
+
+        .compass-control { position: absolute; right: 14px; bottom: 108px; z-index: 1000; background: rgba(20,26,33,0.9); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 8px; width: 88px; box-shadow: 0 4px 12px rgba(0,0,0,0.35); text-align: center; }
+        .compass-dial { width: 56px; height: 56px; margin: 0 auto 6px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.35); position: relative; background: radial-gradient(circle at center, rgba(255,255,255,0.08), rgba(255,255,255,0.02)); }
+        .compass-n { position: absolute; top: 2px; left: 0; right: 0; color: #e84393; font-size: 10px; font-weight: 700; }
+        .compass-needle { position: absolute; top: 50%; left: 50%; width: 24px; height: 24px; margin-left: -12px; margin-top: -18px; transform-origin: center 16px; transition: transform 0.2s linear; }
+        .compass-needle::before,
+        .compass-needle::after { content: ""; position: absolute; width: 12px; height: 3px; background: #ffffff; top: 8px; border-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.45); }
+        .compass-needle::before { left: 1px; transform: rotate(-40deg); transform-origin: right center; }
+        .compass-needle::after { right: 1px; transform: rotate(40deg); transform-origin: left center; }
+        .compass-readout { font-size: 10px; color: #dfe6e9; font-weight: 700; }
+
+        .user-heading-marker { background: transparent; border: none; }
+        .user-heading-wrap { width: 34px; height: 34px; position: relative; }
+        .user-heading-arrow { width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 16px solid #00cec9; position: absolute; top: 2px; left: 9px; transform-origin: 50% 15px; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.45)); }
+        .user-heading-dot { width: 12px; height: 12px; border-radius: 50%; background: #0fbcf9; border: 2px solid #fff; position: absolute; left: 11px; top: 19px; box-shadow: 0 0 0 1px rgba(0,0,0,0.2); }
+
+        @media (max-width: 768px) {
+            .compass-control { right: 10px; bottom: 104px; width: 82px; }
+            .opacity-control { top: 12px; right: 196px; min-width: 150px; }
+        }
     </style>
 </head>
 <body>
@@ -157,6 +177,13 @@
             <span id="opacity-value">100%</span>
         </div>
     </div>
+    <div class="compass-control" id="compass-control">
+        <div class="compass-dial">
+            <div class="compass-n">N</div>
+            <div class="compass-needle" id="compass-needle"></div>
+        </div>
+        <div class="compass-readout" id="compass-readout">Rumbo: --</div>
+    </div>
     <div id="map"></div>
 </div>
 
@@ -181,6 +208,9 @@ const AppState = {
     offsetRebuildQueued: false,
     polygonOpacityFactor: 1,
     isTracking: false,
+    headingDeg: null,
+    orientationListening: false,
+    orientationHandler: null,
     marcadorUsuario: null,
     circuloPrecision: null
 };
@@ -751,6 +781,91 @@ function toggleSidebar() {
     setTimeout(() => map.invalidateSize(), 300);
 }
 
+function normalizeHeading(deg) {
+    let d = deg % 360;
+    if (d < 0) d += 360;
+    return d;
+}
+
+function getHeadingFromOrientationEvent(event) {
+    if (!event) return null;
+    if (typeof event.webkitCompassHeading === "number" && Number.isFinite(event.webkitCompassHeading)) {
+        return normalizeHeading(event.webkitCompassHeading);
+    }
+    if (typeof event.alpha === "number" && Number.isFinite(event.alpha)) {
+        return normalizeHeading(360 - event.alpha);
+    }
+    return null;
+}
+
+function buildUserHeadingIcon(headingDeg) {
+    const heading = Number.isFinite(headingDeg) ? headingDeg : 0;
+    return L.divIcon({
+        className: "user-heading-marker",
+        html: `<div class="user-heading-wrap"><div class="user-heading-arrow" style="transform: rotate(${heading}deg)"></div><div class="user-heading-dot"></div></div>`,
+        iconSize: [34, 34],
+        iconAnchor: [17, 17]
+    });
+}
+
+function updateCompassUI() {
+    const readout = document.getElementById("compass-readout");
+    const needle = document.getElementById("compass-needle");
+    if (!Number.isFinite(AppState.headingDeg)) {
+        readout.textContent = "Rumbo: --";
+        needle.style.transform = "rotate(0deg)";
+        return;
+    }
+    const heading = normalizeHeading(AppState.headingDeg);
+    readout.textContent = `Rumbo: ${heading.toFixed(0)}°`;
+    needle.style.transform = `rotate(${heading}deg)`;
+}
+
+function setHeading(newHeading) {
+    if (!Number.isFinite(newHeading)) return;
+    AppState.headingDeg = normalizeHeading(newHeading);
+    updateCompassUI();
+    if (AppState.marcadorUsuario) {
+        AppState.marcadorUsuario.setIcon(buildUserHeadingIcon(AppState.headingDeg));
+    }
+}
+
+function stopOrientationTracking() {
+    if (!AppState.orientationListening || !AppState.orientationHandler) return;
+    window.removeEventListener("deviceorientationabsolute", AppState.orientationHandler);
+    window.removeEventListener("deviceorientation", AppState.orientationHandler);
+    AppState.orientationListening = false;
+}
+
+function startOrientationTracking() {
+    if (AppState.orientationListening) return;
+    AppState.orientationHandler = (event) => {
+        const heading = getHeadingFromOrientationEvent(event);
+        if (Number.isFinite(heading)) setHeading(heading);
+    };
+    window.addEventListener("deviceorientationabsolute", AppState.orientationHandler, true);
+    window.addEventListener("deviceorientation", AppState.orientationHandler, true);
+    AppState.orientationListening = true;
+}
+
+async function requestOrientationPermissionIfNeeded() {
+    if (typeof DeviceOrientationEvent === "undefined") {
+        startOrientationTracking();
+        return;
+    }
+    const maybeFn = DeviceOrientationEvent.requestPermission;
+    if (typeof maybeFn !== "function") {
+        startOrientationTracking();
+        return;
+    }
+    try {
+        const permission = await maybeFn.call(DeviceOrientationEvent);
+        if (permission === "granted") startOrientationTracking();
+    } catch (err) {
+        console.warn("Permiso de orientacion no concedido.", err);
+    }
+}
+
 function inicializarGPSControl() {
     const gpsControl = L.control({ position: "bottomleft" });
     gpsControl.onAdd = function onAdd(mapa) {
@@ -764,6 +879,7 @@ function inicializarGPSControl() {
                 btn.style.background = "#0fbcf9";
                 btn.style.color = "white";
                 btn.textContent = "ON";
+                requestOrientationPermissionIfNeeded();
                 mapa.locate({ watch: true, enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 });
             } else {
                 AppState.isTracking = false;
@@ -771,6 +887,7 @@ function inicializarGPSControl() {
                 btn.style.color = "black";
                 btn.textContent = "GPS";
                 mapa.stopLocate();
+                stopOrientationTracking();
                 if (AppState.marcadorUsuario) {
                     mapa.removeLayer(AppState.marcadorUsuario);
                     mapa.removeLayer(AppState.circuloPrecision);
@@ -787,13 +904,14 @@ function inicializarGPSControl() {
         const radio = e.accuracy / 2;
         if (!AppState.marcadorUsuario) {
             AppState.circuloPrecision = L.circle(e.latlng, { radius: radio, color: "#0fbcf9", weight: 1, opacity: 0.5, fillOpacity: 0.15 }).addTo(map);
-            AppState.marcadorUsuario = L.circleMarker(e.latlng, { radius: 8, fillColor: "#0fbcf9", color: "#fff", weight: 3, opacity: 1, fillOpacity: 1 }).addTo(map);
+            AppState.marcadorUsuario = L.marker(e.latlng, { icon: buildUserHeadingIcon(AppState.headingDeg) }).addTo(map);
             map.flyTo(e.latlng, 19);
         } else {
             AppState.marcadorUsuario.setLatLng(e.latlng);
             AppState.circuloPrecision.setLatLng(e.latlng);
             AppState.circuloPrecision.setRadius(radio);
         }
+        if (typeof e.heading === "number" && Number.isFinite(e.heading)) setHeading(e.heading);
     });
 
     map.on("locationerror", () => {
