@@ -33,6 +33,15 @@
         .search-box input { width: 100%; padding: 10px; border-radius: 5px; border: none; box-sizing: border-box; }
         .filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .filter-btn { border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 10.5px; color: #1e272e; transition: 0.2s; }
+        .group-filter-box { display: none; background: rgba(255,255,255,0.08); border-radius: 10px; padding: 10px; }
+        .group-filter-title { font-size: 11px; font-weight: bold; color: #dcdde1; margin-bottom: 8px; text-transform: uppercase; }
+        .group-filter-list { max-height: 180px; overflow-y: auto; display: grid; gap: 6px; }
+        .group-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #ecf0f1; background: rgba(255,255,255,0.06); padding: 6px 8px; border-radius: 6px; }
+        .group-item input { accent-color: #00cec9; }
+        .group-tools { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+        .group-tools button { flex: 1; border: none; border-radius: 5px; padding: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
+        .group-tools .all { background: #00b894; color: #072b24; }
+        .group-tools .none { background: #636e72; color: white; }
         .popup-container { min-width: 250px; color: #2d3436; }
         .popup-title { font-weight: bold; color: var(--primary); border-bottom: 2px solid var(--accent); margin-bottom: 8px; font-size: 14px; padding-bottom: 4px; }
         .data-row { display: flex; justify-content: space-between; margin-bottom: 5px; border-bottom: 1px dotted #ccc; padding-bottom: 2px; }
@@ -66,6 +75,17 @@
         .offset-btn.apply { background: #1abc9c; color: #0b2d2d; }
         .offset-btn.reset { background: #7f8c8d; color: white; }
         .offset-status { margin-top: 6px; font-size: 10px; color: #a4b0be; text-align: center; }
+        .floating-offset-control { display: none; position: absolute; top: 72px; left: 15px; z-index: 1000; width: 260px; background: rgba(20,26,33,0.94); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 10px; box-shadow: 0 6px 14px rgba(0,0,0,0.35); }
+        #sidebar.oculto + #map-container .floating-offset-control { display: block; }
+        .floating-offset-control.collapsed { width: auto; padding: 0; border: none; background: transparent; box-shadow: none; }
+        .floating-offset-control.collapsed .floating-offset-panel { display: none; }
+        .floating-offset-toggle { width: 42px; height: 42px; border: none; border-radius: 8px; cursor: pointer; background: #16a085; color: #ffffff; font-size: 18px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.35); }
+        .floating-offset-toggle:hover { background: #1abc9c; }
+        .floating-offset-title { font-size: 11px; font-weight: 700; color: #dfe6e9; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.3px; }
+        .floating-offset-row { display: flex; justify-content: space-between; align-items: center; color: #dcdde1; font-size: 11px; margin-bottom: 4px; }
+        .floating-offset-slider { width: 100%; margin-bottom: 8px; }
+        .floating-offset-actions { display: flex; justify-content: flex-end; margin-top: 4px; }
+        .floating-offset-actions button { border: none; border-radius: 5px; padding: 6px 10px; font-size: 11px; font-weight: 700; cursor: pointer; background: #7f8c8d; color: #fff; }
 
         #batch-container { display: none; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; border-left: 4px solid #f1c40f; }
         #batch-input { width: 100%; height: 140px; border-radius: 5px; padding: 10px; box-sizing: border-box; border: none; font-family: monospace; font-size: 12px; resize: vertical; background: #34495e; color: white; }
@@ -87,6 +107,7 @@
 
         @media (max-width: 768px) {
             .opacity-control { bottom: 14px; min-width: 160px; }
+            .floating-offset-control { top: 68px; left: 10px; width: 235px; }
         }
     </style>
 </head>
@@ -158,11 +179,40 @@
         <button class="filter-btn" id="btn-pendiente" style="background: var(--pending); color: white; grid-column: span 2;" onclick="filtrarMapa('PENDIENTE')">PENDIENTE (<span id="count-pending">-</span>)</button>
     </div>
 
+    <div id="group-filter-box" class="group-filter-box">
+        <div class="group-filter-title">Filtros por Grupo de Inspecci&oacute;n</div>
+        <div class="group-tools">
+            <button id="groups-all-btn" class="all">Marcar todos</button>
+            <button id="groups-none-btn" class="none">Quitar todos</button>
+        </div>
+        <div id="group-filter-list" class="group-filter-list"></div>
+    </div>
+
     <div class="developer-credit">Plataforma GIS por:<br><div class="developer-name">Ing. Fernando Huancapaza Zea</div></div>
 </div>
 
 <div id="map-container">
     <button class="toggle-btn" onclick="toggleSidebar()">&#9776;</button>
+    <div id="floating-offset-control" class="floating-offset-control collapsed">
+        <button id="floating-offset-toggle" class="floating-offset-toggle" title="Ajuste fino">&#9881;</button>
+        <div id="floating-offset-panel" class="floating-offset-panel">
+            <div class="floating-offset-title">Ajuste fino de poligonos</div>
+            <div class="floating-offset-row">
+                <span>Este (+E / -O)</span>
+                <span id="floating-offset-east-value">0.0 m</span>
+            </div>
+            <input id="floating-offset-east" class="floating-offset-slider" type="range" min="-30" max="30" step="0.1" value="0">
+            <div class="floating-offset-row">
+                <span>Norte (+N / -S)</span>
+                <span id="floating-offset-north-value">0.0 m</span>
+            </div>
+            <input id="floating-offset-north" class="floating-offset-slider" type="range" min="-30" max="30" step="0.1" value="0">
+            <div id="floating-offset-status" class="offset-status">Offset actual: E 0.0 m | N 0.0 m</div>
+            <div class="floating-offset-actions">
+                <button id="floating-offset-reset">Reiniciar</button>
+            </div>
+        </div>
+    </div>
     <div class="opacity-control">
         <div class="opacity-title">Transparencia Pol&iacute;gonos</div>
         <div class="opacity-row">
@@ -190,6 +240,8 @@ const AppState = {
     dbExcel: {},
     equipoActivo: "ESTADO_SINABIP",
     filtroActivo: "TODOS",
+    inspectionVisited: {},
+    inspectionSelectedGroups: {},
     poligonosVisibles: [],
     fondoDataOriginal: null,
     prediosDataOriginal: null,
@@ -302,16 +354,15 @@ function obtenerEstiloPorEquipo(cus) {
     let opacidad = 0.75;
 
     if (AppState.equipoActivo === "ESTADO_INSP_PAN") {
-        if (estado === "RD2025") color = "#0984e3";
-        else if (estado === "RD2026") color = "#00b894";
-        else if (estado === "RD2025-SINABIP") color = "#6c5ce7";
-        else if (estado === "RD2026-SINABIP") color = "#e84393";
-        else if (estado === "SINABIP") color = "#e17055";
-        else if (estado === "2026") color = "#00cec9";
-        else if (estado === "EN PROCESO") color = "#ffdd59";
-        else {
-            opacidad = 0.35;
-            color = "#ff5e57";
+        const grupo = getInspectionGroupName(info);
+        const visitado = isInspectionVisited(cus, info);
+        if (grupo) {
+            const base = getGroupColorHex(grupo);
+            color = visitado ? darkenHslColor(base, 0.62) : base;
+            opacidad = visitado ? 0.88 : 0.65;
+        } else {
+            opacidad = 0.25;
+            color = "#7f8c8d";
         }
     } else if (estado === "TERMINADO") {
         color = "#05c46b";
@@ -331,6 +382,8 @@ function crearPopupSeguro(cus, info) {
     const sSinabip = Utils.escapeHtml(info.ESTADO_SINABIP || "P");
     const sRd = Utils.escapeHtml(info.ESTADO_RD || "P");
     const sInsp = Utils.escapeHtml(info.ESTADO_INSP_PAN || "P");
+    const grupoInspec = Utils.escapeHtml(getInspectionGroupName(info) || "SIN GRUPO");
+    const visitaInspec = isInspectionVisited(cus, info) ? "VISITADO" : "PENDIENTE";
     const cusUrl = encodeURIComponent((cus || "").toString());
     const urlFoto = `https://storage.googleapis.com/catastro-moquegua.firebasestorage.app/Captura_${cusUrl}.webp`;
 
@@ -338,11 +391,13 @@ function crearPopupSeguro(cus, info) {
         <div class="popup-container">
             <div class="popup-title">CUS: ${c}</div>
             <div class="data-row"><span class="label">PE:</span><span>${pe}</span></div>
-            <div class="status-box">
-                <div class="status-item"><span>SINABIP:</span><span style="color:${getColorText(info.ESTADO_SINABIP)}">${sSinabip}</span></div>
-                <div class="status-item"><span>RD:</span><span style="color:${getColorText(info.ESTADO_RD)}">${sRd}</span></div>
-                <div class="status-item"><span>INSP:</span><span style="color:${getColorText(info.ESTADO_INSP_PAN)}">${sInsp}</span></div>
-            </div>
+                <div class="status-box">
+                    <div class="status-item"><span>SINABIP:</span><span style="color:${getColorText(info.ESTADO_SINABIP)}">${sSinabip}</span></div>
+                    <div class="status-item"><span>RD:</span><span style="color:${getColorText(info.ESTADO_RD)}">${sRd}</span></div>
+                    <div class="status-item"><span>INSP:</span><span style="color:${getColorText(info.ESTADO_INSP_PAN)}">${sInsp}</span></div>
+                    <div class="status-item"><span>GRUPO:</span><span>${grupoInspec}</span></div>
+                    <div class="status-item"><span>VISITA:</span><span>${visitaInspec}</span></div>
+                </div>
             <a href="${urlFoto}" target="_blank" rel="noopener noreferrer" class="photo-btn">Ver Captura Sinabip</a>
         </div>
     `;
@@ -391,28 +446,176 @@ function guardarOffset() {
     }
 }
 
+function getInspectionVisitedStorageKey() {
+    return "visor_saneamiento_inspec_visitado_v1";
+}
+
+function cargarVisitadosInspeccion() {
+    try {
+        const raw = localStorage.getItem(getInspectionVisitedStorageKey());
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === "object") {
+            AppState.inspectionVisited = parsed;
+        }
+    } catch (err) {
+        console.warn("No se pudo cargar estado de visitados.", err);
+    }
+}
+
+function guardarVisitadosInspeccion() {
+    try {
+        localStorage.setItem(getInspectionVisitedStorageKey(), JSON.stringify(AppState.inspectionVisited || {}));
+    } catch (err) {
+        console.warn("No se pudo guardar estado de visitados.", err);
+    }
+}
+
+function getInspectionGroupName(info) {
+    if (!info) return "";
+    const group = info.INSPECCION || info.INSPECION || info.GRUPO || "";
+    return (group || "").toString().trim();
+}
+
+function getInspectionGroupKey(info) {
+    const group = getInspectionGroupName(info);
+    return group || "__SIN_GRUPO__";
+}
+
+function getInspectionGroupLabel(groupKey) {
+    return groupKey === "__SIN_GRUPO__" ? "SIN GRUPO" : groupKey;
+}
+
+function getInspectionGroupsFromLayer() {
+    const mapGroups = new Map();
+    if (!AppState.geojsonLayer) return mapGroups;
+    AppState.geojsonLayer.eachLayer((layer) => {
+        const cus = layer.feature && layer.feature.properties ? layer.feature.properties.NRO_CUS : "";
+        const info = AppState.dbExcel[cus] || {};
+        const groupKey = getInspectionGroupKey(info);
+        if (!mapGroups.has(groupKey)) mapGroups.set(groupKey, 0);
+        mapGroups.set(groupKey, mapGroups.get(groupKey) + 1);
+    });
+    return mapGroups;
+}
+
+function initializeInspectionGroupSelection() {
+    const groups = getInspectionGroupsFromLayer();
+    const current = AppState.inspectionSelectedGroups || {};
+    const next = {};
+    groups.forEach((_count, key) => {
+        next[key] = Object.prototype.hasOwnProperty.call(current, key) ? !!current[key] : true;
+    });
+    AppState.inspectionSelectedGroups = next;
+}
+
+function isInspectionGroupVisible(groupKey) {
+    const m = AppState.inspectionSelectedGroups || {};
+    if (!Object.prototype.hasOwnProperty.call(m, groupKey)) return true;
+    return !!m[groupKey];
+}
+
+function setAllInspectionGroups(value) {
+    Object.keys(AppState.inspectionSelectedGroups || {}).forEach((key) => {
+        AppState.inspectionSelectedGroups[key] = !!value;
+    });
+}
+
+function renderInspectionGroupFilters() {
+    const box = document.getElementById("group-filter-box");
+    const list = document.getElementById("group-filter-list");
+    if (!box || !list) return;
+    if (AppState.equipoActivo !== "ESTADO_INSP_PAN") {
+        box.style.display = "none";
+        return;
+    }
+    box.style.display = "block";
+    initializeInspectionGroupSelection();
+
+    const groups = Array.from(getInspectionGroupsFromLayer().entries())
+        .sort((a, b) => a[0].localeCompare(b[0], "es"));
+    list.innerHTML = "";
+    groups.forEach(([groupKey, count]) => {
+        const row = document.createElement("label");
+        row.className = "group-item";
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.checked = isInspectionGroupVisible(groupKey);
+        input.addEventListener("change", () => {
+            AppState.inspectionSelectedGroups[groupKey] = !!input.checked;
+            filtrarMapa("TODOS");
+        });
+        const text = document.createElement("span");
+        text.textContent = `${getInspectionGroupLabel(groupKey)} (${count})`;
+        row.appendChild(input);
+        row.appendChild(text);
+        list.appendChild(row);
+    });
+}
+
+function isInspectionVisited(cus, info) {
+    const key = (cus || "").toString();
+    if (key && Object.prototype.hasOwnProperty.call(AppState.inspectionVisited, key)) {
+        return !!AppState.inspectionVisited[key];
+    }
+    const field = (info && (info.INSPECCION_VISITA || info.VISITADO || info.ESTADO_VISITA || "")) || "";
+    const v = Utils.normalizeText(field);
+    return v === "VISITADO" || v === "SI" || v === "SÍ" || v === "1" || v === "TRUE" || v === "OK";
+}
+
+function setInspectionVisited(cus, value) {
+    const key = (cus || "").toString();
+    if (!key) return;
+    AppState.inspectionVisited[key] = !!value;
+    guardarVisitadosInspeccion();
+}
+
+function getGroupColorHex(groupName) {
+    const name = (groupName || "").toString().trim().toUpperCase();
+    if (!name) return "#95a5a6";
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+        hash = ((hash << 5) - hash + name.charCodeAt(i)) | 0;
+    }
+    const hue = Math.abs(hash) % 360;
+    return `hsl(${hue} 72% 52%)`;
+}
+
+function darkenHslColor(hslText, factor) {
+    const m = /hsl\(([-\d.]+)\s+([-\d.]+)%\s+([-\d.]+)%\)/i.exec(hslText || "");
+    if (!m) return hslText;
+    const h = Number(m[1]);
+    const s = Number(m[2]);
+    const l = Number(m[3]);
+    const nl = Math.max(12, Math.min(90, l * factor));
+    return `hsl(${h} ${s}% ${nl}%)`;
+}
+
 function actualizarOffsetUI() {
-    const eastInput = document.getElementById("offset-east");
-    const northInput = document.getElementById("offset-north");
-    const eastValue = document.getElementById("offset-east-value");
-    const northValue = document.getElementById("offset-north-value");
-    const status = document.getElementById("offset-status");
-    eastInput.value = AppState.offsetEastMeters.toFixed(1);
-    northInput.value = AppState.offsetNorthMeters.toFixed(1);
-    eastValue.textContent = `${AppState.offsetEastMeters.toFixed(1)} m`;
-    northValue.textContent = `${AppState.offsetNorthMeters.toFixed(1)} m`;
-    status.textContent = `Offset actual: E ${AppState.offsetEastMeters.toFixed(1)} m | N ${AppState.offsetNorthMeters.toFixed(1)} m`;
-}
+    const east = AppState.offsetEastMeters.toFixed(1);
+    const north = AppState.offsetNorthMeters.toFixed(1);
 
-function actualizarSoloEtiquetasSlider() {
-    const east = parseFloat(document.getElementById("offset-east").value);
-    const north = parseFloat(document.getElementById("offset-north").value);
-    document.getElementById("offset-east-value").textContent = `${(Number.isFinite(east) ? east : 0).toFixed(1)} m`;
-    document.getElementById("offset-north-value").textContent = `${(Number.isFinite(north) ? north : 0).toFixed(1)} m`;
-}
+    const offsetEast = document.getElementById("offset-east");
+    const offsetNorth = document.getElementById("offset-north");
+    const offsetEastValue = document.getElementById("offset-east-value");
+    const offsetNorthValue = document.getElementById("offset-north-value");
+    const offsetStatus = document.getElementById("offset-status");
+    if (offsetEast) offsetEast.value = east;
+    if (offsetNorth) offsetNorth.value = north;
+    if (offsetEastValue) offsetEastValue.textContent = `${east} m`;
+    if (offsetNorthValue) offsetNorthValue.textContent = `${north} m`;
+    if (offsetStatus) offsetStatus.textContent = `Offset actual: E ${east} m | N ${north} m`;
 
-function actualizarTextoEstadoOffset() {
-    document.getElementById("offset-status").textContent = `Offset actual: E ${AppState.offsetEastMeters.toFixed(1)} m | N ${AppState.offsetNorthMeters.toFixed(1)} m`;
+    const floatingEast = document.getElementById("floating-offset-east");
+    const floatingNorth = document.getElementById("floating-offset-north");
+    const floatingEastValue = document.getElementById("floating-offset-east-value");
+    const floatingNorthValue = document.getElementById("floating-offset-north-value");
+    const floatingStatus = document.getElementById("floating-offset-status");
+    if (floatingEast) floatingEast.value = east;
+    if (floatingNorth) floatingNorth.value = north;
+    if (floatingEastValue) floatingEastValue.textContent = `${east} m`;
+    if (floatingNorthValue) floatingNorthValue.textContent = `${north} m`;
+    if (floatingStatus) floatingStatus.textContent = `Offset actual: E ${east} m | N ${north} m`;
 }
 
 function toggleOffsetPanel() {
@@ -482,10 +685,35 @@ function reconstruirCapasConOffset() {
         style: (f) => obtenerEstiloPorEquipo(f.properties.NRO_CUS),
         onEachFeature: (f, layer) => {
             const cus = f.properties.NRO_CUS;
-            const info = AppState.dbExcel[cus] || {};
-            layer.bindPopup(crearPopupSeguro(cus, info));
+            const getInfo = () => AppState.dbExcel[cus] || {};
+            layer.on("click", (ev) => {
+                if (AppState.equipoActivo === "ESTADO_INSP_PAN") {
+                    layer.unbindPopup();
+                    if (ev && ev.originalEvent) {
+                        ev.originalEvent.preventDefault();
+                        ev.originalEvent.stopPropagation();
+                    }
+                    layer.closePopup();
+                    map.closePopup();
+                    const info = getInfo();
+                    const grupo = getInspectionGroupName(info);
+                    if (!grupo) return;
+                    const nuevo = !isInspectionVisited(cus, info);
+                    setInspectionVisited(cus, nuevo);
+                    layer.setStyle(obtenerEstiloPorEquipo(cus));
+                    actualizarStats();
+                    renderizarEtiquetasCUS();
+                    return;
+                }
+                const info = getInfo();
+                layer.bindPopup(crearPopupSeguro(cus, info)).openPopup();
+            });
         }
     }).addTo(map);
+
+    if (AppState.equipoActivo === "ESTADO_INSP_PAN") {
+        renderInspectionGroupFilters();
+    }
 
     if (AppState.equipoActivo === "BUSCAR_CANTIDAD") {
         AppState.geojsonLayer.eachLayer((l) => map.removeLayer(l));
@@ -505,17 +733,19 @@ function aplicarOffsetDesdeUI() {
     AppState.offsetEastMeters = Number.isFinite(eastVal) ? eastVal : 0;
     AppState.offsetNorthMeters = Number.isFinite(northVal) ? northVal : 0;
     guardarOffset();
-    actualizarTextoEstadoOffset();
+    actualizarOffsetUI();
     reconstruirCapasConOffset();
 }
 
-function aplicarOffsetTiempoReal() {
-    const eastVal = parseFloat(document.getElementById("offset-east").value);
-    const northVal = parseFloat(document.getElementById("offset-north").value);
+function aplicarOffsetTiempoReal(event) {
+    const fromFloating = !!(event && event.target && event.target.id && event.target.id.startsWith("floating-offset-"));
+    const eastEl = document.getElementById(fromFloating ? "floating-offset-east" : "offset-east");
+    const northEl = document.getElementById(fromFloating ? "floating-offset-north" : "offset-north");
+    const eastVal = parseFloat(eastEl ? eastEl.value : "0");
+    const northVal = parseFloat(northEl ? northEl.value : "0");
     AppState.offsetEastMeters = Number.isFinite(eastVal) ? eastVal : 0;
     AppState.offsetNorthMeters = Number.isFinite(northVal) ? northVal : 0;
-    actualizarSoloEtiquetasSlider();
-    actualizarTextoEstadoOffset();
+    actualizarOffsetUI();
     guardarOffset();
 
     if (AppState.offsetRebuildQueued) return;
@@ -637,17 +867,16 @@ function filtrarMapa(filtro) {
     AppState.filtroActivo = filtro;
     AppState.poligonosVisibles = [];
     AppState.geojsonLayer.eachLayer((layer) => {
-        const info = AppState.dbExcel[layer.feature.properties.NRO_CUS];
+        const cus = layer.feature.properties.NRO_CUS;
+        const info = AppState.dbExcel[cus];
         const estado = info && info[AppState.equipoActivo] ? Utils.normalizeText(info[AppState.equipoActivo]) : "PENDIENTE";
         let mostrar = false;
 
-        if (filtro === "TODOS") {
+        if (AppState.equipoActivo === "ESTADO_INSP_PAN") {
+            const groupKey = getInspectionGroupKey(info);
+            mostrar = isInspectionGroupVisible(groupKey);
+        } else if (filtro === "TODOS") {
             mostrar = true;
-        } else if (AppState.equipoActivo === "ESTADO_INSP_PAN") {
-            const esTerminado = ["RD2025", "RD2026", "RD2025-SINABIP", "RD2026-SINABIP", "SINABIP", "2026"].includes(estado);
-            if (filtro === "TERMINADO" && esTerminado) mostrar = true;
-            else if (filtro === "PROCESO" && estado === "EN PROCESO") mostrar = true;
-            else if (filtro === "PENDIENTE" && !esTerminado && estado !== "EN PROCESO") mostrar = true;
         } else {
             if (filtro === "TERMINADO" && estado === "TERMINADO") mostrar = true;
             else if (filtro === "PROCESO" && estado.includes("PROCESO")) mostrar = true;
@@ -668,12 +897,15 @@ function filtrarMapa(filtro) {
 function actualizarStats() {
     const s = { T: 0, D: 0, P: 0, PE: 0 };
     AppState.geojsonLayer.eachLayer((layer) => {
-        const info = AppState.dbExcel[layer.feature.properties.NRO_CUS];
+        const cus = layer.feature.properties.NRO_CUS;
+        const info = AppState.dbExcel[cus];
         const estado = info && info[AppState.equipoActivo] ? Utils.normalizeText(info[AppState.equipoActivo]) : "PENDIENTE";
         s.T += 1;
         if (AppState.equipoActivo === "ESTADO_INSP_PAN") {
-            if (["RD2025", "RD2026", "RD2025-SINABIP", "RD2026-SINABIP", "SINABIP", "2026"].includes(estado)) s.D += 1;
-            else if (estado === "EN PROCESO") s.P += 1;
+            const grupo = getInspectionGroupName(info);
+            const visitado = isInspectionVisited(cus, info);
+            if (visitado) s.D += 1;
+            else if (grupo) s.P += 1;
             else s.PE += 1;
         } else if (estado === "TERMINADO") {
             s.D += 1;
@@ -695,10 +927,12 @@ function cambiarEquipoActivo() {
     const batchCont = document.getElementById("batch-container");
     const filterGrid = document.querySelector(".filter-grid");
     const searchBox = document.querySelector(".search-box");
+    const groupFilterBox = document.getElementById("group-filter-box");
 
     if (AppState.equipoActivo === "BUSCAR_CANTIDAD") {
         batchCont.style.display = "block";
         filterGrid.style.display = "none";
+        groupFilterBox.style.display = "none";
         searchBox.style.display = "none";
         AppState.geojsonLayer.eachLayer((l) => map.removeLayer(l));
         document.getElementById("count-all").innerText = "0";
@@ -709,8 +943,17 @@ function cambiarEquipoActivo() {
     }
 
     batchCont.style.display = "none";
-    filterGrid.style.display = "grid";
     searchBox.style.display = "block";
+    if (AppState.equipoActivo === "ESTADO_INSP_PAN") {
+        AppState.geojsonLayer.eachLayer((l) => {
+            if (l && typeof l.unbindPopup === "function") l.unbindPopup();
+        });
+        filterGrid.style.display = "none";
+        renderInspectionGroupFilters();
+    } else {
+        filterGrid.style.display = "grid";
+        groupFilterBox.style.display = "none";
+    }
     AppState.geojsonLayer.eachLayer((l) => l.setStyle(obtenerEstiloPorEquipo(l.feature.properties.NRO_CUS)));
     filtrarMapa("TODOS");
     actualizarStats();
@@ -769,8 +1012,19 @@ function ejecutarBatch() {
 }
 
 function toggleSidebar() {
-    document.getElementById("sidebar").classList.toggle("oculto");
+    const sidebar = document.getElementById("sidebar");
+    sidebar.classList.toggle("oculto");
+    if (!sidebar.classList.contains("oculto")) {
+        const floating = document.getElementById("floating-offset-control");
+        if (floating) floating.classList.add("collapsed");
+    }
     setTimeout(() => map.invalidateSize(), 300);
+}
+
+function toggleFloatingOffsetPanel() {
+    const floating = document.getElementById("floating-offset-control");
+    if (!floating) return;
+    floating.classList.toggle("collapsed");
 }
 
 function normalizeHeading(deg) {
@@ -933,6 +1187,7 @@ async function init() {
     try {
         inicializarGPSControl();
         cargarOffsetGuardado();
+        cargarVisitadosInspeccion();
         actualizarOffsetUI();
         refreshOpacityControlLabel();
         updateOrientationModeUI();
@@ -959,12 +1214,26 @@ document.getElementById("searchInput").addEventListener("keypress", (e) => {
     if (e.key === "Enter") buscarUniversal();
 });
 document.getElementById("offset-toggle").addEventListener("click", toggleOffsetPanel);
+document.getElementById("floating-offset-toggle").addEventListener("click", toggleFloatingOffsetPanel);
 document.getElementById("offset-east").addEventListener("input", aplicarOffsetTiempoReal);
 document.getElementById("offset-north").addEventListener("input", aplicarOffsetTiempoReal);
+document.getElementById("floating-offset-east").addEventListener("input", aplicarOffsetTiempoReal);
+document.getElementById("floating-offset-north").addEventListener("input", aplicarOffsetTiempoReal);
 document.getElementById("offset-apply").addEventListener("click", aplicarOffsetDesdeUI);
 document.getElementById("offset-reset").addEventListener("click", resetearOffset);
+document.getElementById("floating-offset-reset").addEventListener("click", resetearOffset);
 document.getElementById("opacity-slider").addEventListener("input", onOpacitySliderInput);
 document.getElementById("orientation-mode-btn").addEventListener("click", toggleOrientationMode);
+document.getElementById("groups-all-btn").addEventListener("click", () => {
+    setAllInspectionGroups(true);
+    renderInspectionGroupFilters();
+    filtrarMapa("TODOS");
+});
+document.getElementById("groups-none-btn").addEventListener("click", () => {
+    setAllInspectionGroups(false);
+    renderInspectionGroupFilters();
+    filtrarMapa("TODOS");
+});
 
 window.cambiarEquipoActivo = cambiarEquipoActivo;
 window.filtrarMapa = filtrarMapa;
