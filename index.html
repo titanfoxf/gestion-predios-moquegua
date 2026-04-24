@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Saneamiento Físico Legal - Premium Edition</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="./assets/index-tPdRiVdl.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-BaQEHM9p.css">
+  <script type="module" crossorigin src="./assets/index-CZxVSC3z.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-rTg4Cga3.css">
 </head>
 <body>
     <div id="loader" class="loading-screen">
@@ -47,7 +47,13 @@
         <div class="tool-section hidden" id="box-busqueda-masiva">
             <label class="section-label">Búsqueda Masiva (Pega los CUS)</label>
             <textarea id="batch-input" rows="5" placeholder="Ejemplo:&#10;161467&#10;161638"></textarea>
-            <button id="btnBatch" class="btn-primary" style="background:#f59e0b; color:#fff;">PROYECTAR</button>
+            <div style="display: flex; gap: 10px;">
+                <button id="btnBatch" class="btn-primary" style="background:#f59e0b; color:#fff; flex: 2;">PROYECTAR</button>
+                <div class="desktop-only" style="display: flex; gap: 5px; flex: 1.2;">
+                    <button id="btnBatchKML" class="btn-primary" style="background:#10b981; color:#fff; padding: 0; font-size: 11px;" title="Descargar KML">KML 📥</button>
+                    <button id="btnBatchCAD" class="btn-primary" style="background:#e53935; color:#fff; padding: 0; font-size: 11px;" title="Descargar DXF (AutoCAD)">CAD 📥</button>
+                </div>
+            </div>
             <div id="batch-results" style="margin-top:10px; font-size:12px; color:var(--accent);"></div>
         </div>
 
@@ -99,6 +105,18 @@
             </div>
         </div>
 
+        <div class="tool-section desktop-only" id="box-export-kml">
+            <label class="section-label">Exportadores GIS / CAD</label>
+            <div class="offset-slider-group">
+                <div class="flex-between"><span>Grosor de Línea KML</span> <span id="val-kml-weight" class="valor-verde">2 px</span></div>
+                <input type="range" id="kml-weight-slider" min="0" max="10" step="1" value="2">
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button id="btnExportKML" class="btn-primary" style="background:#10b981;">KML</button>
+                <button id="btnExportCAD" class="btn-primary" style="background:#e53935;">AUTOCAD</button>
+            </div>
+        </div>
+
         <div class="developer-credit">
             Platforma GIS por:<br>
             <span class="developer-name">Ing. Fernando Huancapaza Zea</span>
@@ -127,7 +145,7 @@
                 
                 <!-- Eje Y (Norte/Sur) Fijo lado izquierdo -->
                 <div style="position: absolute; bottom: 70px; left: 2px; height: 40vh; min-height: 200px; max-height: 400px; display: flex; align-items: center; pointer-events: auto;">
-                    <input type="range" id="f-offset-north" min="-30" max="30" step="0.1" value="0" class="slider-vertical" style="height: 100%; width: 25px; padding: 0; margin: 0; -webkit-appearance: slider-vertical; outline: none; background: transparent; accent-color: var(--accent);" title="Norte/Sur">
+                    <input type="range" id="f-offset-north" orient="vertical" min="-30" max="30" step="0.1" value="0" class="slider-vertical" style="height: 100%; width: 25px; padding: 0; margin: 0; -webkit-appearance: slider-vertical; outline: none; background: transparent; accent-color: var(--accent);" title="Norte/Sur">
                     <span style="writing-mode: vertical-lr; transform: rotate(180deg); color: #cbd5e1; font-size: 10px; font-weight: 700; letter-spacing: 2px; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); margin-left: 2px; user-select: none; pointer-events: none;">EJE Y (NORTE / SUR)</span>
                 </div>
                 
