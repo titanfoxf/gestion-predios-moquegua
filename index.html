@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Saneamiento Físico Legal - Premium Edition</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="./assets/index-CZxVSC3z.js"></script>
+  <script type="module" crossorigin src="./assets/index-C-aj54Rn.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-rTg4Cga3.css">
 </head>
 <body>
@@ -97,6 +97,20 @@
 
         <div class="tool-section expandable-section">
             <label class="section-label btn-expand" style="cursor:default">
+                Fondo Cartográfico
+            </label>
+            <div class="team-selector" style="display:flex; gap:15px; margin-top:10px; align-items:center; justify-content:center;">
+                <label style="color:#e2e8f0; font-size:12px; display:flex; align-items:center; gap:5px; cursor:pointer;">
+                    <input type="radio" name="fondoOption" value="fondo1" checked style="accent-color:var(--accent);"> Fondo 1
+                </label>
+                <label style="color:#e2e8f0; font-size:12px; display:flex; align-items:center; gap:5px; cursor:pointer;">
+                    <input type="radio" name="fondoOption" value="fondo2" style="accent-color:var(--accent);"> Fondo 2
+                </label>
+            </div>
+        </div>
+
+        <div class="tool-section expandable-section">
+            <label class="section-label btn-expand" style="cursor:default">
                 Opacidad Polígonos
             </label>
             <div class="offset-slider-group" style="margin-top:10px;">
@@ -145,7 +159,7 @@
                 
                 <!-- Eje Y (Norte/Sur) Fijo lado izquierdo -->
                 <div style="position: absolute; bottom: 70px; left: 2px; height: 40vh; min-height: 200px; max-height: 400px; display: flex; align-items: center; pointer-events: auto;">
-                    <input type="range" id="f-offset-north" orient="vertical" min="-30" max="30" step="0.1" value="0" class="slider-vertical" style="height: 100%; width: 25px; padding: 0; margin: 0; -webkit-appearance: slider-vertical; outline: none; background: transparent; accent-color: var(--accent);" title="Norte/Sur">
+                    <input type="range" id="f-offset-north" orient="vertical" min="-30" max="30" step="0.1" value="0" class="slider-vertical" style="height: 100%; width: 25px; padding: 0; margin: 0; -webkit-appearance: slider-vertical; outline: none; background: transparent; accent-color: var(--accent); transform: rotate(180deg);" title="Norte/Sur">
                     <span style="writing-mode: vertical-lr; transform: rotate(180deg); color: #cbd5e1; font-size: 10px; font-weight: 700; letter-spacing: 2px; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); margin-left: 2px; user-select: none; pointer-events: none;">EJE Y (NORTE / SUR)</span>
                 </div>
                 
